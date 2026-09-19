@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { useI18n } from "@/lib/i18n/provider";
 import { scrollToHow } from "@/lib/scroll";
 import { requestHowScroll, useAppState } from "@/lib/store";
@@ -24,7 +25,7 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-line bg-white px-5 py-3">
+    <header className="sticky top-0 z-50 flex flex-wrap items-center justify-between gap-x-3 gap-y-2.5 border-b border-line bg-white px-5 py-3">
       <Link href={href("/")} className="flex shrink-0 items-center gap-2.5" aria-label={dict.nav.home}>
         <div
           lang="en"
@@ -37,7 +38,8 @@ export function SiteHeader() {
           <div className="text-[13px] font-extrabold tracking-[0.5px]">OUTFIT IN 60</div>
         </div>
       </Link>
-      <nav className="flex gap-3 text-[12px] font-semibold tracking-[0.4px] sm:gap-[18px]">
+      {/* Phones: logo + language on the first row, links on a second. From sm up: one row. */}
+      <nav className="order-last flex w-full gap-[18px] text-[12px] font-semibold tracking-[0.4px] sm:order-none sm:ml-auto sm:w-auto">
         <Link href={href("/#how")} onClick={goHow} className="hover:text-brand">
           {dict.nav.howItWorks}
         </Link>
@@ -49,6 +51,7 @@ export function SiteHeader() {
           {savedLooks.length ? ` (${savedLooks.length})` : ""}
         </Link>
       </nav>
+      <LanguageSwitcher className="sm:ml-1.5" />
     </header>
   );
 }

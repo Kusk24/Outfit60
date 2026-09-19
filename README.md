@@ -12,6 +12,7 @@ A campaign concept website for **UNIQLO Thailand's #OutfitIn60 challenge**. You 
 - **Result page**: product cards, total vs. budget, match score, "Try another look", and a shareable challenge card
 - **My Looks**: saved looks are kept in the browser (localStorage)
 - **Community page**: example looks from other players
+- **English and Thai**: switch with EN / ไทย in the nav bar. Every page has both versions, under `/en/...` and `/th/...`.
 - Responsive from phone to desktop. Anuphan font with Thai support.
 
 ## Tech stack
@@ -28,7 +29,7 @@ pnpm install
 pnpm dev
 ```
 
-Open <http://localhost:3000>.
+Open <http://localhost:3000>. It redirects to `/en` or `/th` based on your browser language.
 
 | Command      | What it does                  |
 | ------------ | ----------------------------- |
@@ -37,12 +38,13 @@ Open <http://localhost:3000>.
 | `pnpm start` | Serve the production build    |
 | `pnpm lint`  | Run ESLint                    |
 
-**Quick demo:** the countdown runs in real seconds (34–54 s). To run it faster, add `?speed=fast` to the building page URL (`/building?speed=fast`).
+**Quick demo:** the countdown runs in real seconds (34–54 s). To run it faster, add `?speed=fast` to the building page URL (`/en/building?speed=fast`).
 
 ## Project structure
 
 ```
-app/
+app/[lang]/                Every page, once per language (/en, /th)
+  layout.tsx               Root layout: <html lang>, header, footer, dictionary
   page.tsx                 Landing page
   challenge/               4-step flow (layout = back link, progress bar, next button)
     occasion/ budget/ size/ style/
@@ -50,9 +52,11 @@ app/
   result/                  The finished look
   community/               Community looks
   looks/                   Saved looks
-components/                UI pieces (header, product card, option card, …)
+proxy.ts                   Redirects "/", "/looks", … to /en or /th
+components/                UI pieces (header, language switcher, product card, …)
 lib/
-  data.ts                  Occasions, styles, colours, budgets, copy
+  i18n/en.ts, i18n/th.ts   All site text in English and Thai
+  data.ts                  Occasion, style, colour and budget ids
   products.ts              Product catalogue (100 items)
   outfit.ts                Outfit-building algorithm
   store.ts                 App state (sessionStorage + localStorage)
@@ -64,6 +68,12 @@ public/
 ## Product catalogue
 
 The photos in `public/products` are web-optimised versions of the original shots, which sit in the `Men/` and `Girl/` folders (those originals are not committed). Every item's name, price, sizes, style and occasion tags, and colours are in `lib/products.ts`. Prices are indicative THB prices for the prototype.
+
+## Languages
+
+All text lives in `lib/i18n/en.ts` and `lib/i18n/th.ts`. The Thai dictionary is typed against the English one, so a missing translation fails the build. To change wording, edit the matching key in both files.
+
+Visitors to a URL without a language (`/`, `/looks`, a shared link) are sent to their last choice from the switcher (saved in the `NEXT_LOCALE` cookie). Otherwise they go to their browser's language, or English by default. Product names stay in English, as on UNIQLO's Thai store.
 
 ## Deploying on Vercel
 

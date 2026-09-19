@@ -1,7 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { buildOutfit, DEFAULT_PREFS, occShort, styleName, type Prefs } from "./outfit";
+import type { OccasionId, Size, StyleId } from "./data";
+import { buildOutfit, DEFAULT_PREFS, type Prefs } from "./outfit";
 import { getProducts } from "./products";
 
 export interface LookResult {
@@ -10,13 +11,22 @@ export interface LookResult {
   doneSecs: number;
 }
 
+/** Stored as ids, not text, so a saved look reads correctly in either language. */
 export interface SavedLook {
   id: string;
-  title: string;
-  meta: string;
+  occasion: OccasionId | null;
+  style: StyleId | undefined;
+  size: Size;
+  doneSecs: number;
   total: number;
   itemIds: string[];
 }
+
+const isSavedLook = (value: unknown): value is SavedLook =>
+  typeof value === "object" &&
+  value !== null &&
+  Array.isArray((value as SavedLook).itemIds) &&
+  typeof (value as SavedLook).doneSecs === "number";
 
 interface AppState {
   prefs: Prefs;
@@ -65,7 +75,7 @@ function ensureLoaded() {
     prefs: { ...DEFAULT_PREFS, ...session?.prefs },
     result: result && Array.isArray(result.itemIds) ? result : null,
     lastIds: Array.isArray(session?.lastIds) ? session.lastIds : [],
-    savedLooks: Array.isArray(looks) ? (looks as SavedLook[]) : [],
+    savedLooks: Array.isArray(looks) ? looks.filter(isSavedLook) : [],
   };
 }
 
@@ -133,26 +143,25 @@ export function tryAnotherLook() {
   if (!result) return;
   const itemIds = freshLookIds();
   update({ result: { ...result, itemIds, score: newScore() }, lastIds: itemIds });
-  showToast("New look generated");
 }
 
-export function saveCurrentLook() {
+/** Saves the current result; the caller shows the (translated) toast. */
+export function saveCurrentLook(): "saved" | "duplicate" | null {
   const { prefs, result, savedLooks } = getSnapshot();
-  if (!result) return;
+  if (!result) return null;
   const key = result.itemIds.join("|");
-  if (savedLooks.some((look) => look.itemIds.join("|") === key)) {
-    showToast("This look is already in My Looks");
-    return;
-  }
+  if (savedLooks.some((look) => look.itemIds.join("|") === key)) return "duplicate";
   const look: SavedLook = {
     id: String(Date.now()),
-    title: occShort(prefs.occasion) + " Look",
-    meta: `${styleName(prefs.styles)} · Size ${prefs.size ?? "M"} · ${result.doneSecs} sec`,
+    occasion: prefs.occasion,
+    style: prefs.styles[0],
+    size: prefs.size ?? "M",
+    doneSecs: result.doneSecs,
     total: getProducts(result.itemIds).reduce((sum, item) => sum + item.price, 0),
     itemIds: result.itemIds,
   };
   update({ savedLooks: [...savedLooks, look] });
-  showToast("Look saved to My Looks");
+  return "saved";
 }
 
 // "How It Works" from another page: land on "/" first, then the landing page scrolls down.

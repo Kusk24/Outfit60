@@ -37,6 +37,9 @@
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* th:leading-[…] etc. apply only on Thai pages (<html lang="th">). */
+@custom-variant th (&:lang(th));
+
 @theme {
   --font-sans: "Anuphan", "Helvetica Neue", sans-serif;
 
@@ -130,4 +133,10 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Thai script reads badly with tracking, so drop it on Thai text. This sits outside the
+   layers so it beats the tracking utilities; English brand marks carry lang="en". */
+:lang(th) {
+  letter-spacing: normal;
 }

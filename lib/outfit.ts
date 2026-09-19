@@ -1,4 +1,4 @@
-import { BUDGET_CHALLENGE_CAP, OCCASIONS, STYLES, type ColorLabel, type OccasionId, type Size, type StyleId } from "./data";
+import { BUDGET_CHALLENGE_CAP, type ColorLabel, type OccasionId, type Size, type StyleId } from "./data";
 import { PRODUCTS, type Gender, type Product, type Slot } from "./products";
 
 export interface Prefs {
@@ -21,11 +21,6 @@ export const DEFAULT_PREFS: Prefs = {
 
 export const effectiveBudget = (prefs: Prefs) =>
   prefs.occasion === "budget" ? Math.min(prefs.budget, BUDGET_CHALLENGE_CAP) : prefs.budget;
-
-export const occShort = (occasion: OccasionId | null) =>
-  OCCASIONS.find((o) => o.id === occasion)?.short ?? "Your Occasion";
-
-export const styleName = (styles: StyleId[]) => STYLES.find((s) => s.id === styles[0])?.title ?? "Minimal";
 
 /**
  * Picks a complete look (top + bottom, or a dress) plus an optional outer layer and bag,

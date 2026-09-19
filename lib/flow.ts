@@ -5,12 +5,14 @@ export type FlowStep = (typeof FLOW_STEPS)[number];
 
 export const stepPath = (step: FlowStep) => `/challenge/${step}`;
 
-/** The toast shown when a step can't be left yet, or null when it's complete. */
-export function stepError(step: FlowStep, prefs: Prefs): string | null {
-  if (step === "occasion" && !prefs.occasion) return "Pick an occasion to continue";
-  if (step === "size" && !prefs.gender) return "Pick Men or Women to continue";
-  if (step === "size" && !prefs.size) return "Pick your size to continue";
-  if (step === "style" && !prefs.styles.length) return "Pick at least one style";
+export type StepError = "occasion" | "gender" | "size" | "style";
+
+/** Why a step can't be left yet (a key into dict.flow.errors), or null when it's complete. */
+export function stepError(step: FlowStep, prefs: Prefs): StepError | null {
+  if (step === "occasion" && !prefs.occasion) return "occasion";
+  if (step === "size" && !prefs.gender) return "gender";
+  if (step === "size" && !prefs.size) return "size";
+  if (step === "style" && !prefs.styles.length) return "style";
   return null;
 }
 

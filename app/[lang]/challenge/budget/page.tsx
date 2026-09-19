@@ -4,30 +4,32 @@ import { StepHeading } from "@/components/challenge/step-heading";
 import { OptionCard } from "@/components/option-card";
 import { BUDGETS } from "@/lib/data";
 import { baht } from "@/lib/format";
+import { useI18n } from "@/lib/i18n/provider";
 import { effectiveBudget } from "@/lib/outfit";
 import { setPrefs, useAppState } from "@/lib/store";
 
 export default function BudgetStep() {
   const { prefs } = useAppState();
+  const t = useI18n().dict.budgetStep;
 
   return (
     <>
-      <StepHeading title="What's your budget?" sub="We'll only recommend outfits within your limit." />
+      <StepHeading title={t.title} sub={t.sub} />
       <div className="mt-[22px] grid grid-cols-2 gap-3">
-        {BUDGETS.map((budget) => (
+        {BUDGETS.map((value) => (
           <OptionCard
-            key={budget.value}
-            selected={prefs.budget === budget.value}
-            onClick={() => setPrefs({ budget: budget.value })}
+            key={value}
+            selected={prefs.budget === value}
+            onClick={() => setPrefs({ budget: value })}
             className="px-4 py-5 text-center text-[15px] font-extrabold"
           >
-            {budget.label}
+            {t.options[value]}
           </OptionCard>
         ))}
       </div>
       <div className="mt-5 border border-card px-4 py-[18px]">
         <label htmlFor="custom-budget" className="block text-[13px] font-bold">
-          Custom budget
+          {t.custom}
         </label>
         <input
           id="custom-budget"
@@ -40,7 +42,7 @@ export default function BudgetStep() {
           className="m-0.5 mt-3"
         />
         <p className="mt-2 text-[14px] text-body">
-          Your maximum budget: <span className="font-extrabold text-brand">{baht(effectiveBudget(prefs))}</span>
+          {t.max} <span className="font-extrabold text-brand">{baht(effectiveBudget(prefs))}</span>
         </p>
       </div>
     </>

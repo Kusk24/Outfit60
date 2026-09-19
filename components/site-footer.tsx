@@ -1,7 +1,13 @@
+"use client";
+
+import { useI18n } from "@/lib/i18n/provider";
+
 export function SiteFooter() {
+  const { dict } = useI18n();
+
   return (
     <footer className="mt-auto border-t border-line p-[22px] text-center text-[11px] font-semibold text-faint">
-      UNIQLO Thailand · #OutfitIn60 campaign concept — student prototype, not an official UNIQLO site
+      {dict.footer}
     </footer>
   );
 }

@@ -4,7 +4,10 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ProductCard } from "@/components/product-card";
 import { baht } from "@/lib/format";
-import { effectiveBudget, occShort, styleName } from "@/lib/outfit";
+import { fill } from "@/lib/i18n/config";
+import { occShort, styleName } from "@/lib/i18n/labels";
+import { useI18n } from "@/lib/i18n/provider";
+import { effectiveBudget } from "@/lib/outfit";
 import { getProducts } from "@/lib/products";
 import { saveCurrentLook, showToast, tryAnotherLook, useAppState, useHydrated } from "@/lib/store";
 
@@ -16,10 +19,13 @@ export function ResultScreen() {
   const router = useRouter();
   const hydrated = useHydrated();
   const { prefs, result } = useAppState();
+  const { dict, href } = useI18n();
+  const t = dict.result;
+  const startPath = href("/challenge/occasion");
 
   useEffect(() => {
-    if (hydrated && !result) router.replace("/challenge/occasion");
-  }, [hydrated, result, router]);
+    if (hydrated && !result) router.replace(startPath);
+  }, [hydrated, result, router, startPath]);
 
   if (!hydrated || !result) return <main className="flex-1" />;
 
@@ -28,15 +34,25 @@ export function ResultScreen() {
   const budget = effectiveBudget(prefs);
   const diff = budget - total;
   const size = prefs.size ?? "M";
-  const occasion = occShort(prefs.occasion);
-  const style = styleName(prefs.styles);
+  const occasion = occShort(dict, prefs.occasion);
+  const style = styleName(dict, prefs.styles[0]);
+
+  const tryAnother = () => {
+    tryAnotherLook();
+    showToast(dict.toasts.newLook);
+  };
+
+  const save = () => {
+    const outcome = saveCurrentLook();
+    if (outcome) showToast(outcome === "saved" ? dict.toasts.saved : dict.toasts.duplicate);
+  };
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.origin);
-      showToast("Link copied");
+      await navigator.clipboard.writeText(window.location.origin + href("/"));
+      showToast(dict.toasts.linkCopied);
     } catch {
-      showToast("Couldn't copy the link");
+      showToast(dict.toasts.copyFailed);
     }
   };
 
@@ -44,33 +60,31 @@ export function ResultScreen() {
     <main className="animate-fade-up">
       <div className="mx-auto w-full max-w-[640px] px-6 py-10">
         <div className="text-center">
-          <h1 className="text-[34px] font-extrabold tracking-[-0.5px]">Your Look Is Ready!</h1>
-          <p className="mt-1.5 text-[15px] font-bold text-brand">Completed in {result.doneSecs} seconds</p>
-          <p className="mt-1.5 text-[13px] font-semibold text-muted">
-            {occasion} • {style} • Size {size}
-          </p>
+          <h1 className="text-[34px] font-extrabold tracking-[-0.5px]">{t.title}</h1>
+          <p className="mt-1.5 text-[15px] font-bold text-brand">{fill(t.completed, { secs: result.doneSecs })}</p>
+          <p className="mt-1.5 text-[13px] font-semibold text-muted">{fill(t.meta, { occ: occasion, style, size })}</p>
         </div>
 
         <div className="mt-7 grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3.5">
           {items.map((item) => (
-            <ProductCard key={item.id} item={item} sizeLabel={`Size ${size}`} />
+            <ProductCard key={item.id} item={item} size={size} dict={dict} />
           ))}
         </div>
 
         <div className="mt-[22px] flex flex-col gap-2 border-2 border-ink p-[22px]">
           <div className="flex items-baseline justify-between">
-            <span className="text-[13px] font-extrabold tracking-[2px]">TOTAL</span>
+            <span className="text-[13px] font-extrabold tracking-[2px]">{t.total}</span>
             <span className="text-[30px] font-extrabold">{baht(total)}</span>
           </div>
           <div className="flex justify-between gap-3 text-[13px] text-body">
-            <span>Your Budget: {baht(budget)}</span>
+            <span>{fill(t.budget, { budget: baht(budget) })}</span>
             <span className="font-extrabold text-success">
-              ✓ {diff >= 0 ? `${baht(diff)} under budget` : `${baht(-diff)} over budget`}
+              ✓ {fill(diff >= 0 ? t.under : t.over, { amount: baht(Math.abs(diff)) })}
             </span>
           </div>
           <div className="mt-1.5 flex items-center justify-between text-[13px]">
-            <span className="text-body">Complete Look Score</span>
-            <span className="font-extrabold text-brand">{result.score}% Match</span>
+            <span className="text-body">{t.score}</span>
+            <span className="font-extrabold text-brand">{fill(t.match, { score: result.score })}</span>
           </div>
           <div className="h-[5px] bg-track">
             <div className="h-[5px] bg-brand" style={{ width: `${result.score}%` }} />
@@ -79,73 +93,71 @@ export function ResultScreen() {
 
         <button
           type="button"
-          onClick={() => showToast(`Full look (${items.length} items) added to cart`)}
+          onClick={() => showToast(fill(dict.toasts.addedToCart, { n: items.length }))}
           className="mt-[18px] block w-full bg-brand p-[18px] text-center text-[17px] font-extrabold tracking-[1px] text-white hover:bg-brand-dark"
         >
-          ADD FULL LOOK TO CART
+          {t.addToCart}
         </button>
         <div className="mt-3 grid grid-cols-3 gap-2.5">
-          <button type="button" onClick={tryAnotherLook} className={outlineButton}>
-            TRY ANOTHER LOOK
+          <button type="button" onClick={tryAnother} className={outlineButton}>
+            {t.tryAnother}
           </button>
-          <button type="button" onClick={() => router.push("/challenge/occasion")} className={outlineButton}>
-            EDIT PREFERENCES
+          <button type="button" onClick={() => router.push(startPath)} className={outlineButton}>
+            {t.edit}
           </button>
-          <button type="button" onClick={saveCurrentLook} className={outlineButton}>
-            SAVE LOOK
+          <button type="button" onClick={save} className={outlineButton}>
+            {t.save}
           </button>
         </div>
 
         <section className="mt-11">
-          <h2 className="text-center text-[24px] font-extrabold">Why this works for you</h2>
+          <h2 className="text-center text-[24px] font-extrabold">{t.whyTitle}</h2>
           <p className="mt-3 text-center text-[14px] leading-[1.65] text-pretty text-body">
-            For your {occasion.toLowerCase()}, we selected a clean {style} combination that looks put-together while
-            keeping you comfortable throughout the day. Every item matches your selected size and stays within your{" "}
-            {baht(budget)} budget.
+            {fill(t.why, { occ: occasion, occLower: occasion.toLowerCase(), style, budget: baht(budget) })}
           </p>
           <ul className="mt-4 flex flex-wrap justify-center gap-2.5">
-            {[prefs.occasion === "interview" ? "Professional" : "Effortless", "Comfortable", "Within Budget"].map(
-              (badge) => (
-                <li key={badge} className="border border-ink px-4 py-[7px] text-[12px] font-bold tracking-[0.5px]">
-                  {badge}
-                </li>
-              ),
-            )}
+            {[
+              prefs.occasion === "interview" ? t.badges.professional : t.badges.effortless,
+              t.badges.comfortable,
+              t.badges.withinBudget,
+            ].map((badge) => (
+              <li key={badge} className="border border-ink px-4 py-[7px] text-[12px] font-bold tracking-[0.5px]">
+                {badge}
+              </li>
+            ))}
           </ul>
         </section>
 
         <section className="mt-11 bg-ink px-6 py-[34px] text-center text-white">
-          <h2 className="text-[26px] font-extrabold tracking-[-0.5px]">You did it in {result.doneSecs} seconds.</h2>
-          <p className="mt-1.5 text-[13px] font-semibold text-mist">Now challenge your friends.</p>
+          <h2 className="text-[26px] font-extrabold tracking-[-0.5px]">{fill(t.shareTitle, { secs: result.doneSecs })}</h2>
+          <p className="mt-1.5 text-[13px] font-semibold text-mist">{t.shareSub}</p>
           <div className="mx-auto mt-5 max-w-[300px] bg-brand px-[18px] py-[22px] text-left">
-            <p className="text-[11px] font-extrabold tracking-[2px]">MY #OUTFITIN60</p>
-            <p className="mt-2 text-[19px] font-extrabold">{occasion} Look</p>
+            <p lang="en" className="text-[11px] font-extrabold tracking-[2px]">
+              MY #OUTFITIN60
+            </p>
+            <p className="mt-2 text-[19px] font-extrabold">{fill(t.lookTitle, { occ: occasion })}</p>
             <div className="mt-3.5 flex justify-between gap-3 text-[13px] font-semibold">
               <span>
-                Completed: <b>{result.doneSecs} sec</b>
+                {t.shareCompleted} <b>{fill(t.shareSecs, { secs: result.doneSecs })}</b>
               </span>
               <span>
-                Total: <b>{baht(total)}</b>
+                {t.shareTotal} <b>{baht(total)}</b>
               </span>
             </div>
             <p className="mt-3 text-[11px] font-bold">#OutfitIn60 · #ครบลุคใน60วิ</p>
           </div>
           <div className="mt-[18px] flex flex-wrap justify-center gap-2.5">
-            <button type="button" onClick={() => showToast("Opening TikTok share... (prototype)")} className={shareButton}>
-              Share to TikTok
+            <button type="button" onClick={() => showToast(dict.toasts.tiktok)} className={shareButton}>
+              {t.shareTikTok}
             </button>
-            <button
-              type="button"
-              onClick={() => showToast("Opening Instagram share... (prototype)")}
-              className={shareButton}
-            >
-              Share to Instagram
+            <button type="button" onClick={() => showToast(dict.toasts.instagram)} className={shareButton}>
+              {t.shareInstagram}
             </button>
             <button type="button" onClick={copyLink} className={shareButton}>
-              Copy Link
+              {t.copyLink}
             </button>
           </div>
-          <p className="mt-4 text-[13px] font-semibold text-mist">Can your friends beat your time?</p>
+          <p className="mt-4 text-[13px] font-semibold text-mist">{t.beatTime}</p>
         </section>
       </div>
     </main>

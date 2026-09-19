@@ -1,8 +1,12 @@
 import Image from "next/image";
 import { baht } from "@/lib/format";
+import { fill } from "@/lib/i18n/config";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Product } from "@/lib/products";
 
-export function ProductCard({ item, sizeLabel }: { item: Product; sizeLabel: string }) {
+export function ProductCard({ item, size, dict }: { item: Product; size: string; dict: Dictionary }) {
+  const t = dict.result;
+
   return (
     <article className="border border-card">
       <div className="relative aspect-[3/4] bg-paper">
@@ -16,11 +20,14 @@ export function ProductCard({ item, sizeLabel }: { item: Product; sizeLabel: str
         />
       </div>
       <div className="px-3.5 py-3">
-        <p className="text-[11px] font-bold tracking-[1px] text-faint">{item.cat}</p>
-        <h3 className="mt-0.5 text-[14px] font-extrabold">{item.name}</h3>
+        <p className="text-[11px] font-bold tracking-[1px] text-faint">{dict.categories[item.cat] ?? item.cat}</p>
+        {/* Product names stay in English, as on UNIQLO's own Thai store. */}
+        <h3 lang="en" className="mt-0.5 text-[14px] font-extrabold">
+          {item.name}
+        </h3>
         <p className="mt-1 text-[15px] font-extrabold text-brand">{baht(item.price)}</p>
-        <p className="mt-0.5 text-[12px] text-body">{item.sizes ? sizeLabel : "One size"}</p>
-        <p className="mt-0.5 text-[12px] font-bold text-success">✓ In Stock</p>
+        <p className="mt-0.5 text-[12px] text-body">{item.sizes ? fill(t.size, { size }) : t.oneSize}</p>
+        <p className="mt-0.5 text-[12px] font-bold text-success">{t.inStock}</p>
       </div>
     </article>
   );

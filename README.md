@@ -8,8 +8,8 @@ A campaign concept website for **UNIQLO Thailand's #OutfitIn60 challenge**. You 
 
 - **4-step challenge**: occasion → budget → Men/Women + size → style and colours
 - **Live 60-second countdown**, with checklist steps ticking off as it runs
-- **Outfit builder**: scores 150 UNIQLO products on occasion, style and colour, keeps the total under budget, and adds an outer layer or bag when there's room
-- **Result page**: product cards, total vs. budget, match score, "Try another look", and a shareable challenge card
+- **Outfit builder**: scores 150 UNIQLO products on occasion, style and colour, keeps the total under budget, and adds a layer and accessories when there's room
+- **Result page**: the look laid out as a styling board (top and bottom stacked, layer and accessories at the side), with total vs. budget, match score, "Try another look" and a shareable challenge card
 - **My Looks**: saved looks are kept in the browser (localStorage)
 - **Community page**: example looks from other players
 - **English and Thai**: switch with EN / ไทย in the nav bar. Every page has both versions, under `/en/...` and `/th/...`.
@@ -38,7 +38,7 @@ Open <http://localhost:3000>. It redirects to `/en` or `/th` based on your brows
 | `pnpm start` | Serve the production build    |
 | `pnpm lint`  | Run ESLint                    |
 
-**Quick demo:** the countdown runs in real seconds (34–54 s). To run it faster, add `?speed=fast` to the building page URL (`/en/building?speed=fast`).
+**The countdown** runs in real seconds. A look lands in 10–15 seconds, inside the 60-second challenge clock.
 
 ## Project structure
 

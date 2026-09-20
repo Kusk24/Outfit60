@@ -27,6 +27,16 @@ export const effectiveBudget = (prefs: Prefs) =>
  * scored by occasion, style and colour match and kept within budget. Items from the
  * previous look are penalised so "Try another look" gives something new.
  */
+const ACCESSORY_KINDS: [RegExp, string][] = [
+  [/bag|backpack|tote/i, "bag"],
+  [/belt/i, "belt"],
+  [/cap|hat/i, "hat"],
+  [/scarf|muffler|stole/i, "scarf"],
+  [/glasses/i, "glasses"],
+];
+
+const accessoryKind = (name: string) => ACCESSORY_KINDS.find(([re]) => re.test(name))?.[1] ?? "other";
+
 export function buildOutfit(prefs: Prefs, lastIds: readonly string[], random = Math.random): Product[] {
   const size = prefs.size ?? "M";
   const gender = prefs.gender ?? "women";
@@ -64,7 +74,7 @@ export function buildOutfit(prefs: Prefs, lastIds: readonly string[], random = M
   const bottoms = by("bottom");
   const dresses = by("dress");
   const outers = by("outer");
-  const bags = by("bag");
+  const accessories = by("accessory");
 
   const useDress = dresses.length > 0 && dresses[0].occs.includes(occ) && random() < 0.3 && fits(dresses[0]);
   if (useDress) {
@@ -80,7 +90,15 @@ export function buildOutfit(prefs: Prefs, lastIds: readonly string[], random = M
   if (occ === "interview" || occ === "travel" || random() < 0.4) {
     add(outers.find((p) => p.occs.includes(occ) && fits(p)));
   }
-  add(bags.find((p) => fits(p) && (p.occs.includes(occ) || p.styles.some((s) => prefs.styles.includes(s)))));
+  // Up to two accessories, never two of the same kind (no two bags).
+  const kinds = new Set<string>();
+  for (const item of accessories) {
+    if (kinds.size >= 2) break;
+    const kind = accessoryKind(item.name);
+    if (kinds.has(kind) || !fits(item)) continue;
+    if (!item.occs.includes(occ) && !item.styles.some((s) => prefs.styles.includes(s))) continue;
+    if (add(item)) kinds.add(kind);
+  }
 
   return pick;
 }

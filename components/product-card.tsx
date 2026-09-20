@@ -1,10 +1,11 @@
 import Image from "next/image";
 import { baht } from "@/lib/format";
 import { fill } from "@/lib/i18n/config";
+import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Product } from "@/lib/products";
 
-export function ProductCard({ item, size, dict }: { item: Product; size: string; dict: Dictionary }) {
+export function ProductCard({ item, size, dict, lang }: { item: Product; size: string; dict: Dictionary; lang: Locale }) {
   const t = dict.result;
 
   return (
@@ -20,10 +21,9 @@ export function ProductCard({ item, size, dict }: { item: Product; size: string;
         />
       </div>
       <div className="px-3.5 py-3">
-        <p className="text-[11px] font-bold tracking-[1px] text-faint">{dict.categories[item.cat] ?? item.cat}</p>
-        {/* Product names stay in English, as on UNIQLO's own Thai store. */}
-        <h3 lang="en" className="mt-0.5 text-[14px] font-extrabold">
-          {item.name}
+        <p className="text-[11px] font-bold tracking-[1px] text-faint">{dict.slots[item.slot]}</p>
+        <h3 lang={lang} className="mt-0.5 text-[14px] font-extrabold">
+          {lang === "th" ? item.nameTh : item.name}
         </h3>
         <p className="mt-1 text-[15px] font-extrabold text-brand">{baht(item.price)}</p>
         <p className="mt-0.5 text-[12px] text-body">{item.sizes ? fill(t.size, { size }) : t.oneSize}</p>

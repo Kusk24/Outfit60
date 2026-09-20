@@ -8,7 +8,7 @@ A campaign concept website for **UNIQLO Thailand's #OutfitIn60 challenge**. You 
 
 - **4-step challenge**: occasion → budget → Men/Women + size → style and colours
 - **Live 60-second countdown**, with checklist steps ticking off as it runs
-- **Outfit builder**: scores 100 products on occasion, style and colour, keeps the total under budget, and adds an outer layer or bag when there's room
+- **Outfit builder**: scores 150 UNIQLO products on occasion, style and colour, keeps the total under budget, and adds an outer layer or bag when there's room
 - **Result page**: product cards, total vs. budget, match score, "Try another look", and a shareable challenge card
 - **My Looks**: saved looks are kept in the browser (localStorage)
 - **Community page**: example looks from other players
@@ -67,7 +67,11 @@ public/
 
 ## Product catalogue
 
-The photos in `public/products` are web-optimised versions of the original shots, which sit in the `Men/` and `Girl/` folders (those originals are not committed). Every item's name, price, sizes, style and occasion tags, and colours are in `lib/products.ts`. Prices are indicative THB prices for the prototype.
+`lib/products.ts` holds 150 real products from the [UNIQLO Thailand store](https://www.uniqlo.com/th/th/): product code, English and Thai names, THB price, available sizes and colours. The photos in `public/products` are UNIQLO's own flat product shots, resized to 600×800 WebP.
+
+The data was fetched once from UNIQLO's public store API and checked in, so the site needs no network at build or run time. Style and occasion tags (what suits an interview, a trip, a ฿1,000 budget) are derived from each product's name.
+
+Product names, images and data are © UNIQLO (Fast Retailing). They are used here only for a non-commercial student campaign concept.
 
 ## Languages
 

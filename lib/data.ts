@@ -36,18 +36,18 @@ export const COMMUNITY: { user: string; time: number; occ: "class" | "travel" | 
     user: "@maystyle",
     time: 48,
     occ: "class",
-    items: ["women-striped-t-shirt", "women-denim-culottes", "women-round-mini-shoulder-bag"],
+    items: ["w-mini-t-shirt", "w-pleated-skort", "u-round-mini-shoulder-bag-2026-model"],
   },
   {
     user: "@bankkk",
     time: 39,
     occ: "travel",
-    items: ["men-relaxed-fit-linen-blend-resort-shirt", "men-relaxed-fit-cargo-trousers", "women-utility-shoulder-bag"],
+    items: ["m-open-collar-shirt-short-sleeve", "m-linen-blend-easy-ankle-pants", "u-utility-shoulder-bag"],
   },
   {
     user: "@ployfashion",
     time: 54,
     occ: "budget",
-    items: ["women-chiikawa-ut-graphic-t-shirt", "women-cotton-easy-shorts"],
+    items: ["w-airism-cotton-t-shirt", "w-cotton-easy-shorts"],
   },
 ];

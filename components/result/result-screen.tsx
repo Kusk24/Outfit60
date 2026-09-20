@@ -19,7 +19,7 @@ export function ResultScreen() {
   const router = useRouter();
   const hydrated = useHydrated();
   const { prefs, result } = useAppState();
-  const { dict, href } = useI18n();
+  const { dict, href, lang } = useI18n();
   const t = dict.result;
   const startPath = href("/challenge/occasion");
 
@@ -67,7 +67,7 @@ export function ResultScreen() {
 
         <div className="mt-7 grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3.5">
           {items.map((item) => (
-            <ProductCard key={item.id} item={item} size={size} dict={dict} />
+            <ProductCard key={item.id} item={item} size={size} dict={dict} lang={lang} />
           ))}
         </div>
 

@@ -27,7 +27,7 @@ export function CommunityGrid() {
               </p>
               <h2 className="mt-0.5 text-[14px] font-bold">{t.challenges[look.occ]}</h2>
               <p className="mt-1.5 flex gap-3.5 text-[12px] font-semibold text-body">
-                <span>⏱ {fill(t.secs, { secs: look.time })}</span>
+                <span>{fill(t.secs, { secs: look.time })}</span>
                 <span>{baht(total)}</span>
               </p>
               <Link

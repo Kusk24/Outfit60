@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LookCollage } from "@/components/look-collage";
+import { LookBoard } from "@/components/look-board";
 import { COMMUNITY } from "@/lib/data";
 import { baht } from "@/lib/format";
 import { fill } from "@/lib/i18n/config";
@@ -20,7 +20,7 @@ export function CommunityGrid() {
         const total = items.reduce((sum, item) => sum + item.price, 0);
         return (
           <article key={look.user} className="border border-card">
-            <LookCollage items={items} className="h-[180px]" />
+            <LookBoard items={items} className="h-[230px] p-3 sm:p-3" />
             <div className="px-4 py-3.5">
               <p lang="en" className="text-[15px] font-extrabold text-brand">
                 {look.user}

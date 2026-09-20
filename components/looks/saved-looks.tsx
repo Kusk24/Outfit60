@@ -46,8 +46,8 @@ export function SavedLooks() {
             </p>
             <div className="mt-2.5 flex gap-1.5">
               {getProducts(look.itemIds).map((item) => (
-                <div key={item.id} className="relative h-12 w-9 border border-card bg-paper">
-                  <Image src={item.image} alt={item.name} fill sizes="36px" className="object-cover" />
+                <div key={item.id} className="relative h-12 w-9 bg-look">
+                  <Image src={item.image} alt={item.name} fill sizes="36px" className="object-contain" />
                 </div>
               ))}
             </div>

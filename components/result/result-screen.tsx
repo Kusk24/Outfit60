@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { ProductCard } from "@/components/product-card";
+import { LookBoard } from "@/components/look-board";
+import { LookItems } from "@/components/look-items";
 import { baht } from "@/lib/format";
 import { fill } from "@/lib/i18n/config";
 import { occShort, styleName } from "@/lib/i18n/labels";
@@ -65,11 +66,8 @@ export function ResultScreen() {
           <p className="mt-1.5 text-[13px] font-semibold text-muted">{fill(t.meta, { occ: occasion, style, size })}</p>
         </div>
 
-        <div className="mt-7 grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3.5">
-          {items.map((item) => (
-            <ProductCard key={item.id} item={item} size={size} dict={dict} lang={lang} />
-          ))}
-        </div>
+        <LookBoard items={items} className="mt-7 h-[460px] sm:h-[560px]" />
+        <LookItems items={items} size={size} dict={dict} lang={lang} />
 
         <div className="mt-[22px] flex flex-col gap-2 border-2 border-ink p-[22px]">
           <div className="flex items-baseline justify-between">
@@ -79,7 +77,7 @@ export function ResultScreen() {
           <div className="flex justify-between gap-3 text-[13px] text-body">
             <span>{fill(t.budget, { budget: baht(budget) })}</span>
             <span className="font-extrabold text-success">
-              ✓ {fill(diff >= 0 ? t.under : t.over, { amount: baht(Math.abs(diff)) })}
+              {fill(diff >= 0 ? t.under : t.over, { amount: baht(Math.abs(diff)) })}
             </span>
           </div>
           <div className="mt-1.5 flex items-center justify-between text-[13px]">

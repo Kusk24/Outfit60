@@ -11,8 +11,16 @@ import { useI18n } from "@/lib/i18n/provider";
 import { effectiveBudget } from "@/lib/outfit";
 import { completeBuild, useAppState, useHydrated } from "@/lib/store";
 
-/** Seconds tick in real time; add ?speed=fast to the URL for a quick demo run. */
-const tickMs = () => (new URLSearchParams(window.location.search).get("speed") === "fast" ? 130 : 1000);
+/** The challenge clock runs in real seconds; a look lands in 10-15 of the 60. */
+const TICK_MS = 1000;
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 12 12" aria-hidden className="w-2.5" fill="none" stroke="currentColor" strokeWidth={2.2}>
+      <path d="M2 6.4 4.6 9 10 3.2" strokeLinecap="square" />
+    </svg>
+  );
+}
 
 export function BuildingScreen() {
   const router = useRouter();
@@ -36,8 +44,8 @@ function Countdown() {
   const { dict, href } = useI18n();
   const t = dict.building;
   const resultPath = href("/result");
-  // The finish time is random so every run feels live: 34–54 seconds.
-  const [target] = useState(() => 34 + Math.floor(Math.random() * 21));
+  // The finish time is random so every run feels live: 10-15 seconds.
+  const [target] = useState(() => 10 + Math.floor(Math.random() * 6));
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
@@ -50,18 +58,19 @@ function Countdown() {
         completeBuild(target);
         router.replace(resultPath);
       }
-    }, tickMs());
+    }, TICK_MS);
     return () => clearInterval(timer);
   }, [target, router, resultPath]);
 
   const budget = effectiveBudget(prefs);
+  const messageIndex = Math.floor((elapsed / Math.max(target, 1)) * 4);
   const messages = [
     fill(t.messages.style, { style: styleName(dict, prefs.styles[0]) }),
     fill(t.messages.size, { size: prefs.size ?? "M" }),
     fill(t.messages.budget, { budget: baht(budget) }),
     t.messages.colours,
   ];
-  const stepDone = (i: number) => elapsed >= target * (0.1 + i * 0.16);
+  const stepDone = (i: number) => elapsed >= target * (0.12 + i * 0.15);
   const stepActive = (i: number) => !stepDone(i) && (i === 0 || stepDone(i - 1));
 
   return (
@@ -78,7 +87,7 @@ function Countdown() {
         />
       </div>
       <p className="min-h-5 animate-blink text-[14px] font-semibold text-brand" aria-live="polite">
-        {messages[Math.floor(elapsed / 5) % messages.length]}
+        {messages[Math.min(messageIndex, messages.length - 1)]}
       </p>
       <ol className="mx-auto mt-6 flex max-w-[340px] flex-col gap-2.5 text-left">
         {t.steps.map((label, i) => (
@@ -95,7 +104,7 @@ function Countdown() {
                 stepDone(i) ? "bg-brand text-white" : "bg-track text-faint",
               )}
             >
-              {stepDone(i) ? "✓" : i + 1}
+              {stepDone(i) ? <CheckIcon /> : i + 1}
             </span>
             {label}
           </li>

@@ -59,6 +59,8 @@
   --color-track: #eeeeee;
   --color-dot: #dddddd;
   --color-paper: #f7f7f5;
+  /* Warm neutral behind the styling board, like a lookbook page. */
+  --color-look: #efebe6;
   --color-success: #0a8a3a;
 
   --animate-fade-up: fade-up 0.35s ease;

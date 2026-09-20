@@ -80,9 +80,15 @@ export function buildOutfit(prefs: Prefs, lastIds: readonly string[], random = M
   if (useDress) {
     add(dresses[0]);
   } else {
-    // Best-scoring top that still leaves room for a bottom, then the best bottom that fits.
-    const cheapestBottom = cheapest(bottoms);
-    const top = tops.find((p) => p.price + cheapestBottom <= budget) ?? tops.find(fits);
+    // Best-scoring top that still leaves room for a bottom — ideally one that suits
+    // the occasion, so a pricey shirt can't force shorts into an interview look.
+    const forOccasion = bottoms.filter((p) => p.occs.includes(occ));
+    const cheapestRight = forOccasion.length ? cheapest(forOccasion) : Infinity;
+    const cheapestAny = cheapest(bottoms);
+    const top =
+      tops.find((p) => p.price + cheapestRight <= budget) ??
+      tops.find((p) => p.price + cheapestAny <= budget) ??
+      tops.find(fits);
     add(top);
     add(bottoms.find(fits));
   }
@@ -91,10 +97,13 @@ export function buildOutfit(prefs: Prefs, lastIds: readonly string[], random = M
     add(outers.find((p) => p.occs.includes(occ) && fits(p)));
   }
   // Up to two accessories, never two of the same kind (no two bags).
+  // An interview look stays to a bag or a belt — no caps or sunglasses.
+  const allowed = occ === "interview" ? ["bag", "belt"] : null;
   const kinds = new Set<string>();
   for (const item of accessories) {
     if (kinds.size >= 2) break;
     const kind = accessoryKind(item.name);
+    if (allowed && !allowed.includes(kind)) continue;
     if (kinds.has(kind) || !fits(item)) continue;
     if (!item.occs.includes(occ) && !item.styles.some((s) => prefs.styles.includes(s))) continue;
     if (add(item)) kinds.add(kind);

@@ -62,19 +62,32 @@ lib/
   products.ts              Product catalogue (152 items)
   outfit.ts                Outfit-building algorithm
   ut.ts                    UT Creator Studio design generator
+  ut-collections.ts        Real UNIQLO UT collaboration tees
   store.ts                 App state (sessionStorage + localStorage)
 public/
   products/                Product photos (WebP, 3:4)
+  ut/                      UT collaboration tees and their prints
   fonts/                   Anuphan web fonts
 ```
 
 ## UT Creator Studio
 
-`/en/ut` and `/th/ut`. Pick one of three plain UNIQLO tees, pick a design family — shapes,
-wordmark or pattern — and generate until something lands. Palette and print size are
-adjustable, and the tee's real price, product code and size run are shown.
+`/en/ut` and `/th/ut`, with two tabs.
 
-Designs are **generated from a seed, not drawn by an image model**. `lib/ut.ts` turns a seed
+**UT Collections** lists 18 real UNIQLO UT collaboration tees — One Piece, Naruto, Jujutsu
+Kaisen, BLEACH, SPY x FAMILY, Pokémon, Mario Kart, KAWS, PEANUTS and more — with their real
+product codes, prices and size runs. UNIQLO photographs the plain front of these, so each
+entry shows the garment shot *and* a close-up of the print.
+
+**Design your own** starts from a plain UNIQLO tee: pick a design family — shapes, wordmark
+or pattern — and generate until something lands. Palette and print size are adjustable.
+
+The collaboration artwork belongs to its rights holders (Shueisha, Nintendo, The Pokémon
+Company, Peanuts Worldwide and others) and the photographs are UNIQLO's. They appear here
+only as the real products they are, for a student campaign concept — not a commercial site.
+Nothing in this repo reproduces that artwork outside a UNIQLO product photo.
+
+Designs in the second tab are **generated from a seed, not drawn by an image model**. `lib/ut.ts` turns a seed
 into a list of shapes with a small deterministic PRNG, so the same seed always produces the
 same graphic. The seed and every other setting live in the query string
 (`/en/ut?b=0&f=wordmark&s=zz9&p=1&z=95`), which means a design you like can be bookmarked,

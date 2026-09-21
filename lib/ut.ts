@@ -4,6 +4,7 @@
 // always produces the same graphic, which is what makes a design link shareable.
 
 import { getProduct, type Product } from "./products";
+import { UT_COLLECTIONS } from "./ut-collections";
 
 /** A tee we can print on: plain, photographed front-on, whole garment in frame. */
 interface BlankSpec {
@@ -186,14 +187,24 @@ const isFamily = (value: string | null): value is Family => FAMILIES.includes(va
  * Reads a design out of the URL. Every field falls back to the default, so a
  * hand-edited or truncated link still renders something.
  */
-export function readDesign(params: URLSearchParams): { design: UtDesign; blank: number } {
+export type UtMode = "collections" | "design";
+
+export function readDesign(params: URLSearchParams): {
+  design: UtDesign;
+  blank: number;
+  mode: UtMode;
+  collection: number;
+} {
   const family = params.get("f");
   const seed = Number.parseInt(params.get("s") ?? "", 36);
   const palette = Number.parseInt(params.get("p") ?? "", 10);
   const scale = Number.parseInt(params.get("z") ?? "", 10);
   const blank = Number.parseInt(params.get("b") ?? "", 10);
+  const collection = Number.parseInt(params.get("c") ?? "", 10);
 
   return {
+    mode: params.get("m") === "d" ? "design" : "collections",
+    collection: Number.isFinite(collection) ? clamp(collection, 0, UT_COLLECTIONS.length - 1) : 0,
     design: {
       family: isFamily(family) ? family : DEFAULT_DESIGN.family,
       seed: Number.isFinite(seed) ? seed : DEFAULT_DESIGN.seed,
@@ -205,9 +216,12 @@ export function readDesign(params: URLSearchParams): { design: UtDesign; blank: 
   };
 }
 
-/** The query string that reproduces this design exactly. */
-export function designQuery(design: UtDesign, blank: number): string {
+/** The query string that reproduces the current studio state exactly. */
+export function studioQuery(mode: UtMode, collection: number, design: UtDesign, blank: number): string {
+  if (mode === "collections") return new URLSearchParams({ c: String(collection) }).toString();
+
   const params = new URLSearchParams({
+    m: "d",
     b: String(blank),
     f: design.family,
     s: design.seed.toString(36),

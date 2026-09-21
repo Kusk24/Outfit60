@@ -33,6 +33,18 @@ export const th: Dictionary = {
     yourTime: "เวลาของคุณ",
     start: "เริ่มชาเลนจ์ 60 วินาที",
     startNote: "โอกาสของคุณ งบของคุณ ไซซ์ของคุณ ครบจบในลุคเดียว",
+    featuresTitle: "เริ่มได้ 2 ทาง",
+    features: {
+      builder: {
+        name: "One-Click Outfit Builder",
+        desc: "ตอบ 4 คำถาม แล้วรับลุคครบชุด ตรงไซซ์ และไม่เกินงบของคุณ",
+      },
+      ut: {
+        name: "UT Creator Studio",
+        desc: "ออกแบบกราฟิกของคุณเอง หรือเลือกเสื้อ UT คอลแลบของจริง ทั้ง One Piece, นารูโตะ, Pokémon และอีกมาก",
+        cta: "เปิด UT STUDIO",
+      },
+    },
     howTitle: "วิธีเล่น",
     how: [
       { t: "โอกาส", s: "คุณจะไปไหน?" },
@@ -183,6 +195,10 @@ export const th: Dictionary = {
   ut: {
     title: "UT Creator Studio",
     sub: "ออกแบบกราฟิกของคุณเอง ใส่ลงบนเสื้อยืด UNIQLO ของจริง แล้วเก็บลิงก์ดีไซน์ไว้ได้เลย",
+    print: "ลายบนเสื้อ",
+    modeCollections: "UT คอลเลกชัน",
+    modeDesign: "ออกแบบเอง",
+    collectionsSub: "เสื้อ UT คอลแลบของ UNIQLO ที่วางขายจริง",
     blank: "เลือกเสื้อยืด",
     design: "รูปแบบดีไซน์",
     families: { shapes: "รูปทรง", wordmark: "ตัวอักษร", field: "ลวดลาย" },

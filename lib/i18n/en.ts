@@ -32,6 +32,18 @@ export const en = {
     yourTime: "YOUR TIME",
     start: "START THE 60-SECOND CHALLENGE",
     startNote: "Your occasion. Your budget. Your size. One complete look.",
+    featuresTitle: "Two ways to start",
+    features: {
+      builder: {
+        name: "One-Click Outfit Builder",
+        desc: "Answer four questions. Get a complete look, in your size and under your budget.",
+      },
+      ut: {
+        name: "UT Creator Studio",
+        desc: "Design your own graphic, or wear a real UT collaboration — One Piece, Naruto, Pokémon and more.",
+        cta: "OPEN THE UT STUDIO",
+      },
+    },
     howTitle: "HOW IT WORKS",
     how: [
       { t: "Occasion", s: "Where are you going?" },
@@ -182,6 +194,10 @@ export const en = {
   ut: {
     title: "UT Creator Studio",
     sub: "Design your own graphic, put it on a real UNIQLO tee, and take the link with you.",
+    print: "The print",
+    modeCollections: "UT Collections",
+    modeDesign: "Design your own",
+    collectionsSub: "Real UNIQLO UT collaborations, in stores now.",
     blank: "Choose your tee",
     design: "Design",
     families: { shapes: "Shapes", wordmark: "Wordmark", field: "Pattern" },

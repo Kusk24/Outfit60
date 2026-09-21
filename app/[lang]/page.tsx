@@ -33,12 +33,27 @@ export default async function LandingPage({ params }: PageProps<"/[lang]">) {
           </div>
           <div className="text-[9px] font-bold tracking-[2px] text-brand th:text-[11px]">{t.yourTime}</div>
         </div>
-        <Link
-          href={localePath(lang, "/challenge/occasion")}
-          className="block w-full max-w-[420px] bg-brand px-[34px] py-[18px] text-[16px] font-extrabold tracking-[1px] text-white hover:bg-brand-dark"
-        >
-          {t.start}
-        </Link>
+        <h2 className="mt-1 text-[12px] font-bold tracking-[2px] text-brand th:text-[14px]">
+          {t.featuresTitle.toUpperCase()}
+        </h2>
+        <div className="grid w-full max-w-[560px] gap-3 sm:grid-cols-2">
+          <Link
+            href={localePath(lang, "/challenge/occasion")}
+            className="flex flex-col gap-1.5 bg-brand p-5 text-left text-white hover:bg-brand-dark"
+          >
+            <span className="text-[15px] font-extrabold">{t.features.builder.name}</span>
+            <span className="text-[13px] leading-[1.5] text-pretty opacity-90">{t.features.builder.desc}</span>
+            <span className="mt-auto pt-2.5 text-[12px] font-extrabold tracking-[1px]">{t.start} →</span>
+          </Link>
+          <Link
+            href={localePath(lang, "/ut")}
+            className="flex flex-col gap-1.5 border-2 border-ink p-5 text-left hover:bg-ink hover:text-white"
+          >
+            <span className="text-[15px] font-extrabold">{t.features.ut.name}</span>
+            <span className="text-[13px] leading-[1.5] text-pretty opacity-80">{t.features.ut.desc}</span>
+            <span className="mt-auto pt-2.5 text-[12px] font-extrabold tracking-[1px]">{t.features.ut.cta} →</span>
+          </Link>
+        </div>
         <p className="text-[13px] font-medium text-subtle">{t.startNote}</p>
       </section>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StickerArt } from "@/components/ut/sticker-art";
@@ -11,6 +12,7 @@ import { useI18n } from "@/lib/i18n/provider";
 import { showToast } from "@/lib/store";
 import { INKS, STICKERS } from "@/lib/stickers";
 import { UT_BLANK } from "@/lib/ut-blank";
+import { UT_SERIES } from "@/lib/ut-series";
 import {
   colorOf,
   designQuery,
@@ -19,6 +21,7 @@ import {
   MIN_SIZE,
   readDesign,
   type Placed,
+  type Side,
   type UtDesign,
 } from "@/lib/ut";
 
@@ -32,13 +35,22 @@ export function UtStudio() {
 
   // The link is the source of truth on arrival, so a shared design opens exactly as it was saved.
   const [design, setDesign] = useState<UtDesign>(() => readDesign(new URLSearchParams(params.toString())));
-  const [selected, setSelected] = useState<number | null>(design.placed.length ? 0 : null);
+  const [mode, setMode] = useState<"design" | "series">("design");
+  const [seriesIndex, setSeriesIndex] = useState(0);
+  const [designIndex, setDesignIndex] = useState(0);
+  const [side, setSide] = useState<Side>("front");
+  const [selected, setSelected] = useState<number | null>(design.front.length ? 0 : null);
   const [size, setSize] = useState<Size | null>(null);
 
   const color = colorOf(design);
-  const chosenSize = size ?? UT_BLANK.sizes[Math.floor(UT_BLANK.sizes.length / 2)];
-  const current = selected !== null ? design.placed[selected] : undefined;
-  const full = design.placed.length >= MAX_STICKERS;
+  const series = UT_SERIES[seriesIndex];
+  const item = series.designs[Math.min(designIndex, series.designs.length - 1)];
+  const designing = mode === "design";
+  const sizes: readonly Size[] = designing ? UT_BLANK.sizes : item.sizes;
+  const chosenSize = size && sizes.includes(size) ? size : sizes[Math.floor(sizes.length / 2)];
+  const placed = design[side];
+  const current = selected !== null ? placed[selected] : undefined;
+  const full = placed.length >= MAX_STICKERS;
 
   // Keep the address bar in step without a navigation, so the design is always
   // copyable. Debounced because a drag changes the design on every pointer move,
@@ -52,22 +64,32 @@ export function UtStudio() {
   }, [query]);
 
   const patch = (index: number, change: Partial<Placed>) =>
-    setDesign((d) => ({ ...d, placed: d.placed.map((p, i) => (i === index ? { ...p, ...change } : p)) }));
+    setDesign((d) => ({ ...d, [side]: d[side].map((p, i) => (i === index ? { ...p, ...change } : p)) }));
 
   const addSticker = (sticker: string) => {
     if (full) return;
-    setSelected(design.placed.length);
+    setSelected(placed.length);
     setDesign((d) => ({
       ...d,
       // Black and navy tees get a light ink by default, so a new sticker always shows.
-      placed: [...d.placed, { sticker, x: 50, y: 50, size: 42, rotation: 0, ink: d.color === 1 || d.color === 3 ? 2 : 0 }],
+      [side]: [...d[side], { sticker, x: 50, y: 50, size: 42, rotation: 0, ink: d.color === 1 || d.color === 3 ? 2 : 0 }],
     }));
   };
 
   const removeSelected = () => {
     if (selected === null) return;
-    setDesign((d) => ({ ...d, placed: d.placed.filter((_, i) => i !== selected) }));
+    setDesign((d) => ({ ...d, [side]: d[side].filter((_, i) => i !== selected) }));
     setSelected(null);
+  };
+
+  const clearSide = () => {
+    setDesign((d) => ({ ...d, [side]: [] }));
+    setSelected(null);
+  };
+
+  const switchSide = (next: Side) => {
+    setSide(next);
+    setSelected(design[next].length ? 0 : null);
   };
 
   const copyLink = async () => {
@@ -82,20 +104,72 @@ export function UtStudio() {
   return (
     <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,1fr)_320px] md:items-start">
       <div>
+        {designing ? (
         <TeeCanvas
           image={color.image}
           alt={lang === "th" ? UT_BLANK.nameTh : UT_BLANK.name}
-          placed={design.placed}
+          side={side}
+          placed={placed}
           selected={selected}
           onSelect={setSelected}
           onMove={(index, x, y) => patch(index, { x, y })}
         />
+        ) : (
+          <>
+            <div className="relative mx-auto w-full max-w-[420px] bg-look" style={{ aspectRatio: item.ratio }}>
+              <Image src={item.image} alt={lang === "th" ? item.nameTh : item.name} fill loading="eager" sizes="(max-width: 768px) 92vw, 420px" className="object-contain" />
+            </div>
+            <div className="mx-auto mt-3 w-full max-w-[420px]">
+              <p className="mb-1.5 text-[11px] font-extrabold tracking-[1.5px] text-muted uppercase">{t.print}</p>
+              <div className="relative aspect-[3/2] w-full bg-look">
+                <Image src={item.art} alt={t.print} fill loading="eager" sizes="(max-width: 768px) 92vw, 420px" className="object-cover" />
+              </div>
+            </div>
+          </>
+        )}
         <p className="mt-3 text-center text-[12px] leading-[1.6] text-muted">
-          {design.placed.length ? t.dragHint : t.emptyHint}
+          {designing ? (placed.length ? t.dragHint : t.emptyHint) : t.seriesNote}
         </p>
       </div>
 
       <div className="flex flex-col gap-6">
+        <div role="tablist" className="grid grid-cols-2 border-2 border-brand">
+          {(["design", "series"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={mode === value}
+              onClick={() => setMode(value)}
+              className={`px-2 py-2.5 text-[12px] font-extrabold ${
+                mode === value ? "bg-brand text-white" : "hover:bg-brand-tint"
+              }`}
+            >
+              {value === "design" ? t.modeDesign : t.modeSeries}
+            </button>
+          ))}
+        </div>
+
+        {designing ? (
+        <>
+        <div role="tablist" className="grid grid-cols-2 border-2 border-ink">
+          {(["front", "back"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={side === value}
+              onClick={() => switchSide(value)}
+              className={`px-2 py-2.5 text-[12px] font-extrabold ${
+                side === value ? "bg-ink text-white" : "hover:bg-paper"
+              }`}
+            >
+              {value === "front" ? t.front : t.back}
+              {design[value].length ? ` (${design[value].length})` : ""}
+            </button>
+          ))}
+        </div>
+
         <Field label={t.colour}>
           <div className="flex flex-wrap gap-2">
             {UT_BLANK.colors.map((option, i) => (
@@ -114,7 +188,17 @@ export function UtStudio() {
           </div>
         </Field>
 
-        <Field label={full ? fill(t.stickersFull, { n: MAX_STICKERS }) : t.stickers}>
+        <div>
+          <div className="mb-2 flex items-baseline justify-between gap-3">
+            <p className="text-[12px] font-extrabold tracking-[1.5px] uppercase">
+              {full ? fill(t.stickersFull, { n: MAX_STICKERS }) : t.stickers}
+            </p>
+            {placed.length > 0 && (
+              <button type="button" onClick={clearSide} className="text-[12px] font-bold text-brand hover:underline">
+                {t.clearAll}
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-6 gap-1.5">
             {STICKERS.map((sticker) => (
               <button
@@ -130,7 +214,7 @@ export function UtStudio() {
               </button>
             ))}
           </div>
-        </Field>
+        </div>
 
         {current && selected !== null ? (
           <div className="flex flex-col gap-4 border-2 border-ink p-[18px]">
@@ -197,17 +281,67 @@ export function UtStudio() {
             {t.selectHint}
           </p>
         )}
+        </>
+        ) : (
+          <>
+            <Field label={t.series}>
+              <div className="grid grid-cols-3 gap-2">
+                {UT_SERIES.map((option, i) => (
+                  <button
+                    key={option.slug}
+                    type="button"
+                    aria-pressed={seriesIndex === i}
+                    onClick={() => {
+                      setSeriesIndex(i);
+                      setDesignIndex(0);
+                    }}
+                    className={`border-2 px-1.5 py-2 text-[11px] leading-tight font-bold text-pretty ${
+                      seriesIndex === i ? "border-brand bg-brand-tint" : "border-option hover:border-ink"
+                    }`}
+                  >
+                    {lang === "th" ? option.nameTh : option.name}
+                  </button>
+                ))}
+              </div>
+            </Field>
+
+            <Field label={t.designs}>
+              <div className="grid grid-cols-3 gap-2">
+                {series.designs.map((option, i) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    aria-pressed={designIndex === i}
+                    onClick={() => setDesignIndex(i)}
+                    className={`flex flex-col items-center gap-1 border-2 p-1.5 ${
+                      designIndex === i ? "border-brand bg-brand-tint" : "border-option hover:border-ink"
+                    }`}
+                  >
+                    <span className="relative block h-[58px] w-full overflow-hidden">
+                      <Image src={option.art} alt="" fill loading="eager" sizes="90px" className="object-cover" />
+                    </span>
+                    <span lang="en" className="text-[10px] font-bold">
+                      #{option.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </Field>
+          </>
+        )}
 
         <div className="border-2 border-ink p-[18px]">
-          <p className="text-[14px] font-extrabold">{lang === "th" ? UT_BLANK.nameTh : UT_BLANK.name}</p>
+          <p className="text-[14px] font-extrabold text-pretty">
+            {designing ? (lang === "th" ? UT_BLANK.nameTh : UT_BLANK.name) : lang === "th" ? item.nameTh : item.name}
+          </p>
           <p lang="en" className="mt-0.5 text-[12px] text-muted">
-            {UT_BLANK.productId} · {color.name}
+            {designing ? `${UT_BLANK.productId} · ${color.name}` : item.productId}
           </p>
 
           <div className="mt-3.5">
             <span className="text-[12px] font-bold">{t.size}</span>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {UT_BLANK.sizes.map((option) => (
+              {sizes.map((option) => (
                 <button
                   key={option}
                   type="button"
@@ -226,7 +360,7 @@ export function UtStudio() {
 
           <div className="mt-4 flex items-baseline justify-between border-t border-line pt-3">
             <span className="text-[12px] font-extrabold tracking-[2px]">{t.total}</span>
-            <span className="text-[24px] font-extrabold">{baht(UT_BLANK.price)}</span>
+            <span className="text-[24px] font-extrabold">{baht(designing ? UT_BLANK.price : item.price)}</span>
           </div>
         </div>
 

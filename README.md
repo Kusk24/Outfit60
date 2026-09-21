@@ -10,7 +10,7 @@ A campaign concept website for **UNIQLO Thailand's #OutfitIn60 challenge**. You 
 - **Live 60-second countdown**, with checklist steps ticking off as it runs
 - **Outfit builder**: scores 152 UNIQLO products on occasion, style and colour, keeps the total under budget, and adds a layer and accessories when there's room
 - **Result page**: the look laid out as a styling board (top and bottom stacked, layer and accessories at the side), with total vs. budget, match score, "Try another look" and a shareable challenge card
-- **UT Creator Studio**: sticker a real UNIQLO tee, pick the colour, and keep the link
+- **UT Creator Studio**: sticker a real UNIQLO tee front and back, or browse real UT series
 - **My Looks**: saved looks are kept in the browser (localStorage)
 - **Community page**: example looks from other players
 - **English and Thai**: switch with EN / ไทย in the nav bar. Every page has both versions, under `/en/...` and `/th/...`.
@@ -63,30 +63,43 @@ lib/
   outfit.ts                Outfit-building algorithm
   ut.ts                    UT Creator Studio state and share links
   ut-blank.ts              The blank tee and its colourways
+  ut-series.ts             Real UNIQLO UT collaborations, by series
   stickers.ts              Sticker artwork (original SVG)
   store.ts                 App state (sessionStorage + localStorage)
 public/
   products/                Product photos (WebP, 3:4)
-  ut/                      Blank tee, one file per colourway
+  ut/                      Blank tee per colourway; series/ holds the collaborations
   fonts/                   Anuphan web fonts
 ```
 
 ## UT Creator Studio
 
-`/en/ut` and `/th/ut`. Pick the tee colour, drop stickers on the chest, then drag, resize,
-turn and recolour them. Up to six stickers per design. The tee is a real UNIQLO product —
-U Crew Neck T-Shirt, E422992-000, ฿390 — with its real size run.
+`/en/ut` and `/th/ut`, with two modes.
+
+**Design your own.** Pick the tee colour, then drop stickers on the front or the back,
+dragging, resizing, turning and recolouring each one. Up to six stickers a side, with
+"Clear all" per side. The tee is a real UNIQLO product — U Crew Neck T-Shirt, E422992-000,
+฿390 — in eight of its real colourways.
 
 The stickers are **original artwork**, drawn as SVG paths in `lib/stickers.ts`: flame, bolt,
 star, burst, sparkle, heart, speech bubble, cat, skull, cherry blossom, crown and smiley.
 Nothing here reproduces anyone else's characters or logos.
 
-The whole design lives in the query string — `?c=1&s=sakura,34,32,40,0,2;bolt,66,38,34,15,6` —
-so a design can be bookmarked, pasted into a slide or shared, and it comes back identical.
+The whole design lives in the query string — `?c=6&s=cat,50,46,42,0,2&b=burst,50,40,62,0,2`
+(`s` front, `b` back) — so it can be bookmarked, pasted into a slide or shared, and it comes
+back identical.
 
-**On the tee photos:** UNIQLO publishes a flat product shot for one colourway only; the rest
-are model photos. The eight colourways here are therefore rendered from that single cut-out
-shot, keeping its shading, and are labelled with UNIQLO's own colour names and codes.
+**UT series.** Six real UNIQLO collaborations — Naruto, One Piece, Jujutsu Kaisen, BLEACH,
+SPY x FAMILY and Pokémon — with two or three designs each, 17 in total. Pick a series, then a
+design, and see the real product: code, price, size run, garment photo and a close-up of the
+print. The artwork belongs to each series' rights holder; it appears only inside UNIQLO's own
+product photography, the way any shop listing shows it. This is a student campaign concept,
+not a shop, and the studio never lets that artwork be composited onto another garment.
+
+**On the photos:** UNIQLO publishes a flat product shot for one colourway only, so the eight
+blank colourways are rendered from that single high-resolution cut-out, keeping its shading,
+and carry UNIQLO's own colour names and codes. UNIQLO publishes no back shot for the blank,
+so the back view mirrors the front — it is a print position, not a photograph of the back.
 
 ## Product catalogue
 

@@ -17,10 +17,14 @@ export interface Placed {
   ink: number;
 }
 
+export type Side = "front" | "back";
+
 export interface UtDesign {
   /** Index into UT_BLANK.colors. */
   color: number;
-  placed: Placed[];
+  /** Stickers are kept per side, so the two prints are independent. */
+  front: Placed[];
+  back: Placed[];
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
@@ -31,7 +35,8 @@ export const MAX_SIZE = 80;
 
 export const DEFAULT_DESIGN: UtDesign = {
   color: 0,
-  placed: [{ sticker: "flame", x: 50, y: 46, size: 48, rotation: 0, ink: 0 }],
+  front: [{ sticker: "flame", x: 50, y: 46, size: 48, rotation: 0, ink: 0 }],
+  back: [],
 };
 
 export const colorOf = (design: UtDesign): BlankColor => UT_BLANK.colors[design.color] ?? UT_BLANK.colors[0];
@@ -75,16 +80,19 @@ function decodePlaced(raw: string | null): Placed[] | null {
 /** Reads a design from the URL, falling back to the default on anything missing. */
 export function readDesign(params: URLSearchParams): UtDesign {
   const color = Number.parseInt(params.get("c") ?? "", 10);
-  const placed = decodePlaced(params.get("s"));
+  const front = decodePlaced(params.get("s"));
+  const back = decodePlaced(params.get("b"));
   return {
     color: Number.isFinite(color) ? clamp(color, 0, UT_BLANK.colors.length - 1) : DEFAULT_DESIGN.color,
-    placed: placed ?? DEFAULT_DESIGN.placed,
+    front: front ?? DEFAULT_DESIGN.front,
+    back: back ?? DEFAULT_DESIGN.back,
   };
 }
 
 /** The query string that reproduces this design exactly. */
 export function designQuery(design: UtDesign): string {
   const params = new URLSearchParams({ c: String(design.color) });
-  params.set("s", encodePlaced(design.placed));
+  params.set("s", encodePlaced(design.front));
+  if (design.back.length) params.set("b", encodePlaced(design.back));
   return params.toString();
 }

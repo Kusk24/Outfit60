@@ -21,9 +21,13 @@ export const UT_BLANK = {
   price: 390,
   sizes: ["XS", "S", "M", "L", "XL", "XXL"] as readonly Size[],
   /** The photo's aspect ratio, so the tee is never letterboxed. */
-  ratio: 0.9172,
-  /** Printable chest area: a square, centred on these percentages of the photo. */
-  print: { x: 50, y: 46, w: 44 },
+  ratio: 0.924,
+  /** Printable areas: squares, centred on these percentages of the photo. */
+  print: {
+    front: { x: 50, y: 46, w: 44 },
+    /** Back prints run larger and sit higher, as UNIQLO's own graphic tees do. */
+    back: { x: 50, y: 44, w: 54 },
+  },
   colors: [
     { code: "00", name: "White", hex: "#f3f2ee", image: "/ut/tee-00.webp" },
     { code: "09", name: "Black", hex: "#242426", image: "/ut/tee-09.webp" },

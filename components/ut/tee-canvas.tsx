@@ -5,11 +5,12 @@ import { useRef } from "react";
 import { StickerPaths } from "@/components/ut/sticker-art";
 import { INKS } from "@/lib/stickers";
 import { UT_BLANK } from "@/lib/ut-blank";
-import type { Placed } from "@/lib/ut";
+import type { Placed, Side } from "@/lib/ut";
 
 interface TeeCanvasProps {
   image: string;
   alt: string;
+  side: Side;
   placed: Placed[];
   selected: number | null;
   onSelect: (index: number | null) => void;
@@ -21,7 +22,8 @@ interface TeeCanvasProps {
  * square and a circle never comes out an ellipse. Sticker positions are
  * percentages of that square, which keeps a design identical at any width.
  */
-export function TeeCanvas({ image, alt, placed, selected, onSelect, onMove }: TeeCanvasProps) {
+export function TeeCanvas({ image, alt, side, placed, selected, onSelect, onMove }: TeeCanvasProps) {
+  const print = UT_BLANK.print[side];
   const area = useRef<HTMLDivElement>(null);
   const dragging = useRef<number | null>(null);
 
@@ -55,15 +57,15 @@ export function TeeCanvas({ image, alt, placed, selected, onSelect, onMove }: Te
         fill
         loading="eager"
         sizes="(max-width: 768px) 92vw, 420px"
-        className="object-contain"
+        className={side === "back" ? "object-contain -scale-x-100" : "object-contain"}
       />
       <div
         ref={area}
         className="absolute aspect-square touch-none"
         style={{
-          left: `${UT_BLANK.print.x}%`,
-          top: `${UT_BLANK.print.y}%`,
-          width: `${UT_BLANK.print.w}%`,
+          left: `${print.x}%`,
+          top: `${print.y}%`,
+          width: `${print.w}%`,
           transform: "translate(-50%, -50%)",
         }}
         onPointerMove={drag}

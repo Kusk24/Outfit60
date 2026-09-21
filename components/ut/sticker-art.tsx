@@ -1,20 +1,32 @@
-import { accentOn, getSticker, INKS } from "@/lib/stickers";
+import { accentOn, artImage, getArtSticker, getSticker, INKS } from "@/lib/stickers";
 
 /** One sticker drawn in its own 100 x 100 box, in the ink it was placed in. */
 export function StickerArt({ sticker, ink, className }: { sticker: string; ink: number; className?: string }) {
-  const art = getSticker(sticker);
-  if (!art) return null;
-  const fill = INKS[ink] ?? INKS[0];
+  const picture = getArtSticker(sticker);
+  if (picture) {
+    return (
+      <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
+        <image href={artImage(sticker)} x={0} y={0} width={100} height={100} preserveAspectRatio="xMidYMid meet" />
+      </svg>
+    );
+  }
+  if (!getSticker(sticker)) return null;
 
   return (
     <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
-      <StickerPaths sticker={sticker} fill={fill} />
+      <StickerPaths sticker={sticker} fill={INKS[ink] ?? INKS[0]} />
     </svg>
   );
 }
 
 /** The bare paths, for callers that already own an <svg> — the tee canvas does. */
 export function StickerPaths({ sticker, fill }: { sticker: string; fill: string }) {
+  const picture = getArtSticker(sticker);
+  if (picture) {
+    // A picture prints as it is, so it keeps its own aspect inside the 100 box.
+    const [w, h] = picture.ratio >= 1 ? [100, 100 / picture.ratio] : [100 * picture.ratio, 100];
+    return <image href={artImage(sticker)} x={(100 - w) / 2} y={(100 - h) / 2} width={w} height={h} />;
+  }
   const art = getSticker(sticker);
   if (!art) return null;
   const accent = accentOn(fill);

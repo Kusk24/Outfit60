@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StickerArt } from "@/components/ut/sticker-art";
@@ -10,9 +9,9 @@ import { baht } from "@/lib/format";
 import { fill } from "@/lib/i18n/config";
 import { useI18n } from "@/lib/i18n/provider";
 import { showToast } from "@/lib/store";
-import { INKS, STICKERS } from "@/lib/stickers";
+import { ART_STICKERS } from "@/lib/art-stickers";
+import { getArtSticker, INKS, STICKERS } from "@/lib/stickers";
 import { UT_BLANK } from "@/lib/ut-blank";
-import { UT_SERIES } from "@/lib/ut-series";
 import {
   colorOf,
   designQuery,
@@ -35,18 +34,12 @@ export function UtStudio() {
 
   // The link is the source of truth on arrival, so a shared design opens exactly as it was saved.
   const [design, setDesign] = useState<UtDesign>(() => readDesign(new URLSearchParams(params.toString())));
-  const [mode, setMode] = useState<"design" | "series">("design");
-  const [seriesIndex, setSeriesIndex] = useState(0);
-  const [designIndex, setDesignIndex] = useState(0);
   const [side, setSide] = useState<Side>("front");
   const [selected, setSelected] = useState<number | null>(design.front.length ? 0 : null);
   const [size, setSize] = useState<Size | null>(null);
 
   const color = colorOf(design);
-  const series = UT_SERIES[seriesIndex];
-  const item = series.designs[Math.min(designIndex, series.designs.length - 1)];
-  const designing = mode === "design";
-  const sizes: readonly Size[] = designing ? UT_BLANK.sizes : item.sizes;
+  const sizes: readonly Size[] = UT_BLANK.sizes;
   const chosenSize = size && sizes.includes(size) ? size : sizes[Math.floor(sizes.length / 2)];
   const placed = design[side];
   const current = selected !== null ? placed[selected] : undefined;
@@ -104,7 +97,6 @@ export function UtStudio() {
   return (
     <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,1fr)_320px] md:items-start">
       <div>
-        {designing ? (
         <TeeCanvas
           image={color.image}
           alt={lang === "th" ? UT_BLANK.nameTh : UT_BLANK.name}
@@ -114,44 +106,12 @@ export function UtStudio() {
           onSelect={setSelected}
           onMove={(index, x, y) => patch(index, { x, y })}
         />
-        ) : (
-          <>
-            <div className="relative mx-auto w-full max-w-[420px] bg-look" style={{ aspectRatio: item.ratio }}>
-              <Image src={item.image} alt={lang === "th" ? item.nameTh : item.name} fill loading="eager" sizes="(max-width: 768px) 92vw, 420px" className="object-contain" />
-            </div>
-            <div className="mx-auto mt-3 w-full max-w-[420px]">
-              <p className="mb-1.5 text-[11px] font-extrabold tracking-[1.5px] text-muted uppercase">{t.print}</p>
-              <div className="relative aspect-[3/2] w-full bg-look">
-                <Image src={item.art} alt={t.print} fill loading="eager" sizes="(max-width: 768px) 92vw, 420px" className="object-cover" />
-              </div>
-            </div>
-          </>
-        )}
         <p className="mt-3 text-center text-[12px] leading-[1.6] text-muted">
-          {designing ? (placed.length ? t.dragHint : t.emptyHint) : t.seriesNote}
+          {placed.length ? t.dragHint : t.emptyHint}
         </p>
       </div>
 
       <div className="flex flex-col gap-6">
-        <div role="tablist" className="grid grid-cols-2 border-2 border-brand">
-          {(["design", "series"] as const).map((value) => (
-            <button
-              key={value}
-              type="button"
-              role="tab"
-              aria-selected={mode === value}
-              onClick={() => setMode(value)}
-              className={`px-2 py-2.5 text-[12px] font-extrabold ${
-                mode === value ? "bg-brand text-white" : "hover:bg-brand-tint"
-              }`}
-            >
-              {value === "design" ? t.modeDesign : t.modeSeries}
-            </button>
-          ))}
-        </div>
-
-        {designing ? (
-        <>
         <div role="tablist" className="grid grid-cols-2 border-2 border-ink">
           {(["front", "back"] as const).map((value) => (
             <button
@@ -216,11 +176,31 @@ export function UtStudio() {
           </div>
         </div>
 
+        <Field label={t.artwork}>
+          <div className="grid grid-cols-5 gap-1.5">
+            {ART_STICKERS.map((art) => (
+              <button
+                key={art.id}
+                type="button"
+                disabled={full}
+                aria-label={`${art.title} — ${art.artist}`}
+                title={`${art.title}${art.artist ? ` — ${art.artist}` : ""}${art.date ? `, ${art.date}` : ""}`}
+                onClick={() => addSticker(art.id)}
+                className="border-2 border-option p-1 hover:border-ink disabled:opacity-35 disabled:hover:border-option"
+              >
+                <StickerArt sticker={art.id} ink={1} className="w-full" />
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] leading-[1.6] text-muted">{t.artworkNote}</p>
+        </Field>
+
         {current && selected !== null ? (
           <div className="flex flex-col gap-4 border-2 border-ink p-[18px]">
             <div className="flex items-center justify-between gap-3">
               <span className="text-[12px] font-extrabold tracking-[1.5px] uppercase">
-                {t.stickerNames[current.sticker as keyof typeof t.stickerNames]}
+                {getArtSticker(current.sticker)?.title ??
+                  t.stickerNames[current.sticker as keyof typeof t.stickerNames]}
               </span>
               <button
                 type="button"
@@ -257,6 +237,12 @@ export function UtStudio() {
               />
             </label>
 
+            {getArtSticker(current.sticker) ? (
+              <p className="text-[11px] leading-[1.6] text-muted">
+                {getArtSticker(current.sticker)?.artist}
+                {getArtSticker(current.sticker)?.date ? `, ${getArtSticker(current.sticker)?.date}` : ""} · {t.publicDomain}
+              </p>
+            ) : (
             <div>
               <span className="text-[12px] font-bold">{t.ink}</span>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -275,67 +261,18 @@ export function UtStudio() {
                 ))}
               </div>
             </div>
+            )}
           </div>
         ) : (
           <p className="border-2 border-dashed border-option p-[18px] text-[13px] leading-[1.6] text-muted">
             {t.selectHint}
           </p>
         )}
-        </>
-        ) : (
-          <>
-            <Field label={t.series}>
-              <div className="grid grid-cols-3 gap-2">
-                {UT_SERIES.map((option, i) => (
-                  <button
-                    key={option.slug}
-                    type="button"
-                    aria-pressed={seriesIndex === i}
-                    onClick={() => {
-                      setSeriesIndex(i);
-                      setDesignIndex(0);
-                    }}
-                    className={`border-2 px-1.5 py-2 text-[11px] leading-tight font-bold text-pretty ${
-                      seriesIndex === i ? "border-brand bg-brand-tint" : "border-option hover:border-ink"
-                    }`}
-                  >
-                    {lang === "th" ? option.nameTh : option.name}
-                  </button>
-                ))}
-              </div>
-            </Field>
-
-            <Field label={t.designs}>
-              <div className="grid grid-cols-3 gap-2">
-                {series.designs.map((option, i) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    aria-pressed={designIndex === i}
-                    onClick={() => setDesignIndex(i)}
-                    className={`flex flex-col items-center gap-1 border-2 p-1.5 ${
-                      designIndex === i ? "border-brand bg-brand-tint" : "border-option hover:border-ink"
-                    }`}
-                  >
-                    <span className="relative block h-[58px] w-full overflow-hidden">
-                      <Image src={option.art} alt="" fill loading="eager" sizes="90px" className="object-cover" />
-                    </span>
-                    <span lang="en" className="text-[10px] font-bold">
-                      #{option.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </Field>
-          </>
-        )}
 
         <div className="border-2 border-ink p-[18px]">
-          <p className="text-[14px] font-extrabold text-pretty">
-            {designing ? (lang === "th" ? UT_BLANK.nameTh : UT_BLANK.name) : lang === "th" ? item.nameTh : item.name}
-          </p>
+          <p className="text-[14px] font-extrabold text-pretty">{lang === "th" ? UT_BLANK.nameTh : UT_BLANK.name}</p>
           <p lang="en" className="mt-0.5 text-[12px] text-muted">
-            {designing ? `${UT_BLANK.productId} · ${color.name}` : item.productId}
+            {UT_BLANK.productId} · {color.name}
           </p>
 
           <div className="mt-3.5">
@@ -360,7 +297,7 @@ export function UtStudio() {
 
           <div className="mt-4 flex items-baseline justify-between border-t border-line pt-3">
             <span className="text-[12px] font-extrabold tracking-[2px]">{t.total}</span>
-            <span className="text-[24px] font-extrabold">{baht(designing ? UT_BLANK.price : item.price)}</span>
+            <span className="text-[24px] font-extrabold">{baht(UT_BLANK.price)}</span>
           </div>
         </div>
 

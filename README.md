@@ -10,6 +10,7 @@ A campaign concept website for **UNIQLO Thailand's #OutfitIn60 challenge**. You 
 - **Live 60-second countdown**, with checklist steps ticking off as it runs
 - **Outfit builder**: scores 152 UNIQLO products on occasion, style and colour, keeps the total under budget, and adds a layer and accessories when there's room
 - **Result page**: the look laid out as a styling board (top and bottom stacked, layer and accessories at the side), with total vs. budget, match score, "Try another look" and a shareable challenge card
+- **UT Creator Studio**: design a graphic, put it on a real UNIQLO tee, and keep the link
 - **My Looks**: saved looks are kept in the browser (localStorage)
 - **Community page**: example looks from other players
 - **English and Thai**: switch with EN / ไทย in the nav bar. Every page has both versions, under `/en/...` and `/th/...`.
@@ -52,18 +53,33 @@ app/[lang]/                Every page, once per language (/en, /th)
   result/                  The finished look
   community/               Community looks
   looks/                   Saved looks
+  ut/                      UT Creator Studio
 proxy.ts                   Redirects "/", "/looks", … to /en or /th
 components/                UI pieces (header, language switcher, product card, …)
 lib/
   i18n/en.ts, i18n/th.ts   All site text in English and Thai
   data.ts                  Occasion, style, colour and budget ids
-  products.ts              Product catalogue (100 items)
+  products.ts              Product catalogue (152 items)
   outfit.ts                Outfit-building algorithm
+  ut.ts                    UT Creator Studio design generator
   store.ts                 App state (sessionStorage + localStorage)
 public/
   products/                Product photos (WebP, 3:4)
   fonts/                   Anuphan web fonts
 ```
+
+## UT Creator Studio
+
+`/en/ut` and `/th/ut`. Pick one of three plain UNIQLO tees, pick a design family — shapes,
+wordmark or pattern — and generate until something lands. Palette and print size are
+adjustable, and the tee's real price, product code and size run are shown.
+
+Designs are **generated from a seed, not drawn by an image model**. `lib/ut.ts` turns a seed
+into a list of shapes with a small deterministic PRNG, so the same seed always produces the
+same graphic. The seed and every other setting live in the query string
+(`/en/ut?b=0&f=wordmark&s=zz9&p=1&z=95`), which means a design you like can be bookmarked,
+shared, or screenshotted for a slide and it will still be there tomorrow. The page says this
+in plain language rather than implying a model it does not use.
 
 ## Product catalogue
 

@@ -68,6 +68,12 @@ export function TeeCanvas({ image, alt, side, placed, selected, onSelect, onMove
           width: `${print.w}%`,
           transform: "translate(-50%, -50%)",
         }}
+        onPointerDown={(event) => {
+          // A press on empty canvas clears the selection, the way a design tool does.
+          if (event.target === event.currentTarget || (event.target as Element).tagName === "svg") {
+            onSelect(null);
+          }
+        }}
         onPointerMove={drag}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}

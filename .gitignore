@@ -49,3 +49,6 @@ next-env.d.ts
 
 # Course source material (briefs, decks) — kept locally, not part of the site
 /reference_uniqlo/
+
+# Screenshots exported for the presentation deck
+/slides/

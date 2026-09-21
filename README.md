@@ -10,7 +10,7 @@ A campaign concept website for **UNIQLO Thailand's #OutfitIn60 challenge**. You 
 - **Live 60-second countdown**, with checklist steps ticking off as it runs
 - **Outfit builder**: scores 152 UNIQLO products on occasion, style and colour, keeps the total under budget, and adds a layer and accessories when there's room
 - **Result page**: the look laid out as a styling board (top and bottom stacked, layer and accessories at the side), with total vs. budget, match score, "Try another look" and a shareable challenge card
-- **UT Creator Studio**: design a graphic, put it on a real UNIQLO tee, and keep the link
+- **UT Creator Studio**: sticker a real UNIQLO tee, pick the colour, and keep the link
 - **My Looks**: saved looks are kept in the browser (localStorage)
 - **Community page**: example looks from other players
 - **English and Thai**: switch with EN / ไทย in the nav bar. Every page has both versions, under `/en/...` and `/th/...`.
@@ -61,38 +61,32 @@ lib/
   data.ts                  Occasion, style, colour and budget ids
   products.ts              Product catalogue (152 items)
   outfit.ts                Outfit-building algorithm
-  ut.ts                    UT Creator Studio design generator
-  ut-collections.ts        Real UNIQLO UT collaboration tees
+  ut.ts                    UT Creator Studio state and share links
+  ut-blank.ts              The blank tee and its colourways
+  stickers.ts              Sticker artwork (original SVG)
   store.ts                 App state (sessionStorage + localStorage)
 public/
   products/                Product photos (WebP, 3:4)
-  ut/                      UT collaboration tees and their prints
+  ut/                      Blank tee, one file per colourway
   fonts/                   Anuphan web fonts
 ```
 
 ## UT Creator Studio
 
-`/en/ut` and `/th/ut`, with two tabs.
+`/en/ut` and `/th/ut`. Pick the tee colour, drop stickers on the chest, then drag, resize,
+turn and recolour them. Up to six stickers per design. The tee is a real UNIQLO product —
+U Crew Neck T-Shirt, E422992-000, ฿390 — with its real size run.
 
-**UT Collections** lists 18 real UNIQLO UT collaboration tees — One Piece, Naruto, Jujutsu
-Kaisen, BLEACH, SPY x FAMILY, Pokémon, Mario Kart, KAWS, PEANUTS and more — with their real
-product codes, prices and size runs. UNIQLO photographs the plain front of these, so each
-entry shows the garment shot *and* a close-up of the print.
+The stickers are **original artwork**, drawn as SVG paths in `lib/stickers.ts`: flame, bolt,
+star, burst, sparkle, heart, speech bubble, cat, skull, cherry blossom, crown and smiley.
+Nothing here reproduces anyone else's characters or logos.
 
-**Design your own** starts from a plain UNIQLO tee: pick a design family — shapes, wordmark
-or pattern — and generate until something lands. Palette and print size are adjustable.
+The whole design lives in the query string — `?c=1&s=sakura,34,32,40,0,2;bolt,66,38,34,15,6` —
+so a design can be bookmarked, pasted into a slide or shared, and it comes back identical.
 
-The collaboration artwork belongs to its rights holders (Shueisha, Nintendo, The Pokémon
-Company, Peanuts Worldwide and others) and the photographs are UNIQLO's. They appear here
-only as the real products they are, for a student campaign concept — not a commercial site.
-Nothing in this repo reproduces that artwork outside a UNIQLO product photo.
-
-Designs in the second tab are **generated from a seed, not drawn by an image model**. `lib/ut.ts` turns a seed
-into a list of shapes with a small deterministic PRNG, so the same seed always produces the
-same graphic. The seed and every other setting live in the query string
-(`/en/ut?b=0&f=wordmark&s=zz9&p=1&z=95`), which means a design you like can be bookmarked,
-shared, or screenshotted for a slide and it will still be there tomorrow. The page says this
-in plain language rather than implying a model it does not use.
+**On the tee photos:** UNIQLO publishes a flat product shot for one colourway only; the rest
+are model photos. The eight colourways here are therefore rendered from that single cut-out
+shot, keeping its shading, and are labelled with UNIQLO's own colour names and codes.
 
 ## Product catalogue
 

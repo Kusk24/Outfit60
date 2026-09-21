@@ -1,25 +1,25 @@
 "use client";
 
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { OptionCard } from "@/components/option-card";
-import { UtGraphic } from "@/components/ut/ut-graphic";
+import { StickerArt } from "@/components/ut/sticker-art";
+import { TeeCanvas } from "@/components/ut/tee-canvas";
 import type { Size } from "@/lib/data";
 import { baht } from "@/lib/format";
 import { fill } from "@/lib/i18n/config";
 import { useI18n } from "@/lib/i18n/provider";
 import { showToast } from "@/lib/store";
-import { UT_COLLECTIONS } from "@/lib/ut-collections";
+import { INKS, STICKERS } from "@/lib/stickers";
+import { UT_BLANK } from "@/lib/ut-blank";
 import {
-  FAMILIES,
-  PALETTES,
-  randomSeed,
+  colorOf,
+  designQuery,
+  MAX_SIZE,
+  MAX_STICKERS,
+  MIN_SIZE,
   readDesign,
-  studioQuery,
-  UT_BLANKS,
+  type Placed,
   type UtDesign,
-  type UtMode,
 } from "@/lib/ut";
 
 const outlineButton =
@@ -31,37 +31,44 @@ export function UtStudio() {
   const params = useSearchParams();
 
   // The link is the source of truth on arrival, so a shared design opens exactly as it was saved.
-  const initial = readDesign(new URLSearchParams(params.toString()));
-  const [mode, setMode] = useState<UtMode>(initial.mode);
-  const [collectionIndex, setCollectionIndex] = useState(initial.collection);
-  const [design, setDesign] = useState<UtDesign>(initial.design);
-  const [blankIndex, setBlankIndex] = useState(initial.blank);
+  const [design, setDesign] = useState<UtDesign>(() => readDesign(new URLSearchParams(params.toString())));
+  const [selected, setSelected] = useState<number | null>(design.placed.length ? 0 : null);
   const [size, setSize] = useState<Size | null>(null);
 
-  // An empty word falls back to the campaign line in the reader's own language.
-  // The fallback is written into the link too, so a shared design never changes.
-  const effective: UtDesign =
-    design.family === "wordmark" && !design.word.trim() ? { ...design, word: t.wordPlaceholder } : design;
+  const color = colorOf(design);
+  const chosenSize = size ?? UT_BLANK.sizes[Math.floor(UT_BLANK.sizes.length / 2)];
+  const current = selected !== null ? design.placed[selected] : undefined;
+  const full = design.placed.length >= MAX_STICKERS;
 
-  const collection = UT_COLLECTIONS[collectionIndex];
-  const blank = UT_BLANKS[blankIndex];
-  const designing = mode === "design";
-
-  // Both modes end at the same place: one real tee with a code, a price and a size run.
-  const tee = designing
-    ? { ...blank.product, ratio: blank.ratio }
-    : { ...collection, ratio: collection.ratio, image: collection.image };
-  const sizes: readonly Size[] = tee.sizes ?? [];
-  // Tees carry different size runs, so a size picked on one may not exist on the next.
-  const chosenSize = size && sizes.includes(size) ? size : (sizes[Math.floor(sizes.length / 2)] ?? null);
-
-  // Keep the address bar in step without a navigation, so the current state is always copyable.
-  const query = studioQuery(mode, collectionIndex, effective, blankIndex);
+  // Keep the address bar in step without a navigation, so the design is always
+  // copyable. Debounced because a drag changes the design on every pointer move,
+  // and Safari throttles history writes to 100 per 30 seconds.
+  const query = designQuery(design);
   useEffect(() => {
-    window.history.replaceState(null, "", `${window.location.pathname}?${query}`);
+    const id = setTimeout(() => {
+      window.history.replaceState(null, "", `${window.location.pathname}?${query}`);
+    }, 250);
+    return () => clearTimeout(id);
   }, [query]);
 
-  const update = (patch: Partial<UtDesign>) => setDesign((current) => ({ ...current, ...patch }));
+  const patch = (index: number, change: Partial<Placed>) =>
+    setDesign((d) => ({ ...d, placed: d.placed.map((p, i) => (i === index ? { ...p, ...change } : p)) }));
+
+  const addSticker = (sticker: string) => {
+    if (full) return;
+    setSelected(design.placed.length);
+    setDesign((d) => ({
+      ...d,
+      // Black and navy tees get a light ink by default, so a new sticker always shows.
+      placed: [...d.placed, { sticker, x: 50, y: 50, size: 42, rotation: 0, ink: d.color === 1 || d.color === 3 ? 2 : 0 }],
+    }));
+  };
+
+  const removeSelected = () => {
+    if (selected === null) return;
+    setDesign((d) => ({ ...d, placed: d.placed.filter((_, i) => i !== selected) }));
+    setSelected(null);
+  };
 
   const copyLink = async () => {
     try {
@@ -75,221 +82,158 @@ export function UtStudio() {
   return (
     <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,1fr)_320px] md:items-start">
       <div>
-        <div className="relative mx-auto w-full max-w-[420px] bg-look" style={{ aspectRatio: tee.ratio }}>
-          <Image
-            src={tee.image}
-            alt={lang === "th" ? tee.nameTh : tee.name}
-            fill
-            loading="eager"
-            sizes="(max-width: 768px) 92vw, 420px"
-            className="object-contain"
-          />
-          {designing && (
-            <div
-              className="absolute"
-              style={{
-                left: `${blank.print.x}%`,
-                top: `${blank.print.y}%`,
-                width: `${(blank.print.w * effective.scale) / 100}%`,
-                transform: "translate(-50%, -50%)",
-              }}
-            >
-              <UtGraphic design={effective} className="w-full" />
-            </div>
-          )}
-        </div>
-        {!designing && collection.art && (
-          <div className="mx-auto mt-3 w-full max-w-[420px]">
-            <p className="mb-1.5 text-[11px] font-extrabold tracking-[1.5px] text-muted uppercase">{t.print}</p>
-            <div className="relative aspect-[3/2] w-full bg-look">
-              <Image
-                src={collection.art}
-                alt={t.print}
-                fill
-                loading="eager"
-                sizes="(max-width: 768px) 92vw, 420px"
-                className="object-cover"
-              />
-            </div>
-          </div>
-        )}
+        <TeeCanvas
+          image={color.image}
+          alt={lang === "th" ? UT_BLANK.nameTh : UT_BLANK.name}
+          placed={design.placed}
+          selected={selected}
+          onSelect={setSelected}
+          onMove={(index, x, y) => patch(index, { x, y })}
+        />
         <p className="mt-3 text-center text-[12px] leading-[1.6] text-muted">
-          {designing ? t.howMade : t.collectionsSub}
+          {design.placed.length ? t.dragHint : t.emptyHint}
         </p>
       </div>
 
       <div className="flex flex-col gap-6">
-        <div role="tablist" className="grid grid-cols-2 border-2 border-ink">
-          {(["collections", "design"] as const).map((value) => (
-            <button
-              key={value}
-              type="button"
-              role="tab"
-              aria-selected={mode === value}
-              onClick={() => setMode(value)}
-              className={`px-2 py-2.5 text-[12px] font-extrabold ${
-                mode === value ? "bg-ink text-white" : "hover:bg-paper"
-              }`}
-            >
-              {value === "collections" ? t.modeCollections : t.modeDesign}
-            </button>
-          ))}
-        </div>
+        <Field label={t.colour}>
+          <div className="flex flex-wrap gap-2">
+            {UT_BLANK.colors.map((option, i) => (
+              <button
+                key={option.code}
+                type="button"
+                aria-pressed={design.color === i}
+                aria-label={option.name}
+                title={option.name}
+                onClick={() => setDesign((d) => ({ ...d, color: i }))}
+                className={`size-9 border-2 p-0.5 ${design.color === i ? "border-brand" : "border-option"}`}
+              >
+                <span className="block size-full border border-line" style={{ backgroundColor: option.hex }} />
+              </button>
+            ))}
+          </div>
+        </Field>
 
-        {designing ? (
-          <>
-            <Field label={t.blank}>
-              <div className="grid grid-cols-3 gap-2">
-                {UT_BLANKS.map((option, i) => (
-                  <OptionCard
-                    key={option.id}
-                    selected={i === blankIndex}
-                    onClick={() => setBlankIndex(i)}
-                    className="items-center gap-1 p-2"
-                  >
-                    <span className="relative block h-[54px] w-full">
-                      <Image src={option.product.image} alt="" fill loading="eager" sizes="90px" className="object-contain" />
-                    </span>
-                    <span className="text-[11px] font-bold">{baht(option.product.price)}</span>
-                  </OptionCard>
-                ))}
-              </div>
-            </Field>
+        <Field label={full ? fill(t.stickersFull, { n: MAX_STICKERS }) : t.stickers}>
+          <div className="grid grid-cols-6 gap-1.5">
+            {STICKERS.map((sticker) => (
+              <button
+                key={sticker.id}
+                type="button"
+                disabled={full}
+                aria-label={t.stickerNames[sticker.id as keyof typeof t.stickerNames]}
+                title={t.stickerNames[sticker.id as keyof typeof t.stickerNames]}
+                onClick={() => addSticker(sticker.id)}
+                className="border-2 border-option p-1.5 hover:border-ink disabled:opacity-35 disabled:hover:border-option"
+              >
+                <StickerArt sticker={sticker.id} ink={1} className="w-full" />
+              </button>
+            ))}
+          </div>
+        </Field>
 
-            <Field label={t.design}>
-              <div className="grid grid-cols-3 gap-2">
-                {FAMILIES.map((family) => (
-                  <OptionCard
-                    key={family}
-                    selected={design.family === family}
-                    onClick={() => update({ family })}
-                    className="px-2 py-3 text-center text-[12px] font-extrabold"
-                  >
-                    {t.families[family]}
-                  </OptionCard>
-                ))}
-              </div>
-            </Field>
+        {current && selected !== null ? (
+          <div className="flex flex-col gap-4 border-2 border-ink p-[18px]">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[12px] font-extrabold tracking-[1.5px] uppercase">
+                {t.stickerNames[current.sticker as keyof typeof t.stickerNames]}
+              </span>
+              <button
+                type="button"
+                onClick={removeSelected}
+                className="text-[12px] font-bold text-brand hover:underline"
+              >
+                {t.remove}
+              </button>
+            </div>
 
-            {design.family === "wordmark" && (
-              <Field label={t.word}>
-                <input
-                  type="text"
-                  value={design.word}
-                  maxLength={28}
-                  placeholder={t.wordPlaceholder}
-                  onChange={(event) => update({ word: event.target.value })}
-                  className="w-full border-2 border-option px-3 py-2.5 text-[14px] font-bold focus:border-ink focus:outline-none"
-                />
-              </Field>
-            )}
+            <label className="block">
+              <span className="text-[12px] font-bold">{t.scale}</span>
+              <input
+                type="range"
+                min={MIN_SIZE}
+                max={MAX_SIZE}
+                step={2}
+                value={current.size}
+                onChange={(event) => patch(selected, { size: Number(event.target.value) })}
+                className="m-0.5 mt-1.5 w-full"
+              />
+            </label>
 
-            <Field label={t.palette}>
-              <div className="flex flex-wrap gap-2">
-                {PALETTES.map((palette, i) => (
+            <label className="block">
+              <span className="text-[12px] font-bold">{t.rotation}</span>
+              <input
+                type="range"
+                min={-180}
+                max={180}
+                step={5}
+                value={current.rotation}
+                onChange={(event) => patch(selected, { rotation: Number(event.target.value) })}
+                className="m-0.5 mt-1.5 w-full"
+              />
+            </label>
+
+            <div>
+              <span className="text-[12px] font-bold">{t.ink}</span>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {INKS.map((hex, i) => (
                   <button
-                    key={palette.id}
+                    key={hex}
                     type="button"
-                    aria-pressed={design.palette === i}
-                    aria-label={t.palettes[palette.id]}
-                    title={t.palettes[palette.id]}
-                    onClick={() => update({ palette: i })}
-                    className={`flex border-2 p-1 ${design.palette === i ? "border-brand" : "border-option"}`}
+                    aria-pressed={current.ink === i}
+                    aria-label={t.inkNames[i]}
+                    title={t.inkNames[i]}
+                    onClick={() => patch(selected, { ink: i })}
+                    className={`size-7 border-2 p-0.5 ${current.ink === i ? "border-brand" : "border-option"}`}
                   >
-                    {palette.colors.map((color) => (
-                      <span key={color} className="size-5 border border-line" style={{ backgroundColor: color }} />
-                    ))}
+                    <span className="block size-full border border-line" style={{ backgroundColor: hex }} />
                   </button>
                 ))}
               </div>
-            </Field>
-
-            <Field label={t.scale}>
-              <input
-                id="ut-scale"
-                type="range"
-                min={55}
-                max={115}
-                step={5}
-                value={design.scale}
-                onChange={(event) => update({ scale: Number(event.target.value) })}
-                className="m-0.5 w-full"
-              />
-            </Field>
-
-            <button
-              type="button"
-              onClick={() => update({ seed: randomSeed() })}
-              className="w-full bg-brand p-[18px] text-[15px] font-extrabold tracking-[1px] text-white hover:bg-brand-dark"
-            >
-              {t.generate}
-            </button>
-          </>
-        ) : (
-          <Field label={t.modeCollections}>
-            <div className="grid grid-cols-3 gap-2">
-              {UT_COLLECTIONS.map((option, i) => (
-                <OptionCard
-                  key={option.id}
-                  selected={i === collectionIndex}
-                  onClick={() => setCollectionIndex(i)}
-                  className="items-center gap-1 p-1.5"
-                >
-                  <span className="relative block h-[58px] w-full overflow-hidden">
-                    <Image
-                      src={option.art ?? option.image}
-                      alt=""
-                      fill
-                      loading="eager"
-                      sizes="90px"
-                      className={option.art ? "object-cover" : "object-contain"}
-                    />
-                  </span>
-                  <span className="text-[10px] leading-tight font-bold text-pretty">{option.label}</span>
-                </OptionCard>
-              ))}
             </div>
-          </Field>
+          </div>
+        ) : (
+          <p className="border-2 border-dashed border-option p-[18px] text-[13px] leading-[1.6] text-muted">
+            {t.selectHint}
+          </p>
         )}
 
         <div className="border-2 border-ink p-[18px]">
-          <p className="text-[14px] font-extrabold text-pretty">{lang === "th" ? tee.nameTh : tee.name}</p>
+          <p className="text-[14px] font-extrabold">{lang === "th" ? UT_BLANK.nameTh : UT_BLANK.name}</p>
           <p lang="en" className="mt-0.5 text-[12px] text-muted">
-            {tee.productId}
+            {UT_BLANK.productId} · {color.name}
           </p>
 
-          {sizes.length > 0 && (
-            <div className="mt-3.5">
-              <span className="text-[12px] font-bold">{t.size}</span>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {sizes.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    lang="en"
-                    aria-pressed={chosenSize === option}
-                    onClick={() => setSize(option)}
-                    className={`min-w-[38px] border-2 px-2 py-1.5 text-[12px] font-extrabold ${
-                      chosenSize === option ? "border-brand bg-brand-tint" : "border-option"
-                    }`}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
+          <div className="mt-3.5">
+            <span className="text-[12px] font-bold">{t.size}</span>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {UT_BLANK.sizes.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  lang="en"
+                  aria-pressed={chosenSize === option}
+                  onClick={() => setSize(option)}
+                  className={`min-w-[38px] border-2 px-2 py-1.5 text-[12px] font-extrabold ${
+                    chosenSize === option ? "border-brand bg-brand-tint" : "border-option"
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
           <div className="mt-4 flex items-baseline justify-between border-t border-line pt-3">
             <span className="text-[12px] font-extrabold tracking-[2px]">{t.total}</span>
-            <span className="text-[24px] font-extrabold">{baht(tee.price)}</span>
+            <span className="text-[24px] font-extrabold">{baht(UT_BLANK.price)}</span>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2.5">
           <button
             type="button"
-            onClick={() => showToast(fill(dict.toasts.utAdded, { size: chosenSize ?? "" }))}
+            onClick={() => showToast(fill(dict.toasts.utAdded, { size: chosenSize }))}
             className={outlineButton}
           >
             {t.addToCart}

@@ -46,3 +46,6 @@ next-env.d.ts
 
 # local Claude Code preview config
 /.claude/
+
+# Course source material (briefs, decks) — kept locally, not part of the site
+/reference_uniqlo/

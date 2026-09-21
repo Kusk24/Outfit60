@@ -39,12 +39,16 @@ export function SiteHeader() {
         </div>
       </Link>
       {/* Phones: logo + language on the first row, links on a second. From sm up: one row. */}
-      <nav className="order-last flex w-full gap-[18px] text-[12px] font-semibold tracking-[0.4px] sm:order-none sm:ml-auto sm:w-auto">
+      {/* Four links only just fit a 375px row, so the gap tightens on phones. */}
+      <nav className="order-last flex w-full gap-2.5 text-[12px] font-semibold tracking-[0.4px] sm:order-none sm:ml-auto sm:w-auto sm:gap-[18px]">
         <Link href={href("/#how")} onClick={goHow} className="hover:text-brand">
           {dict.nav.howItWorks}
         </Link>
         <Link href={href("/challenge/occasion")} className="hover:text-brand">
           {dict.nav.challenge}
+        </Link>
+        <Link href={href("/ut")} className="hover:text-brand">
+          {dict.nav.ut}
         </Link>
         <Link href={href("/looks")} className="hover:text-brand">
           {dict.nav.myLooks}
